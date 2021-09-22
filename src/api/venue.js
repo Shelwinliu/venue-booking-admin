@@ -1,37 +1,50 @@
 import request from '@/utils/request'
 
 // 获取场馆列表
-export function getVenueList(query) {
+// export function getVenueList(query) {
+//   return request({
+//     url: '/vue-element-admin/venue/list',
+//     method: 'get',
+//     params: query
+//   })
+// }
+
+export function getVenueList() {
   return request({
-    url: '/vue-element-admin/venue/list',
-    method: 'get',
-    params: query
+    url: '/venues',
+    method: 'get'
   })
 }
 
 // 新增场馆
-export function addVenueItem(body) {
+// export function addVenueItem(body) {
+//   return request({
+//     url: '/vue-element-admin/venue/add',
+//     method: 'post',
+//     data: body
+//   })
+// }
+export function addVenueItem(data) {
   return request({
-    url: '/vue-element-admin/venue/add',
+    url: '/venues',
     method: 'post',
-    data: body
+    data
   })
 }
 
 // 删除场馆
-export function deleteVenueItem(query) {
+export function deleteVenueItem(id) {
   return request({
-    url: '/vue-element-admin/venue/delete',
+    url: `/venues/${id}`,
     method: 'delete',
-    params: query
   })
 }
 
 // 编辑场馆
-export function editVenueItem(query) {
+export function editVenueItem(data, id) {
   return request({
-    url: '/vue-element-admin/venue/edit',
+    url: `/venues/${id}`,
     method: 'put',
-    params: query
+    data
   })
 }

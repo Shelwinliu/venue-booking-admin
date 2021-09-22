@@ -8,11 +8,11 @@
     >
       <el-form label-width="auto" style="margin-left: 50px;max-width: 500px">
         <el-form-item label="场馆名称">
-          <el-input v-model="venueName" placeholder="例如：篮球馆"></el-input>
+          <el-input v-model="temp.name" placeholder="例如：篮球馆"></el-input>
         </el-form-item>
         <el-form-item label="场馆预约开放周期">
          <div style="display:flex">
-          <el-select v-model="openCycle" placeholder="年限">
+          <el-select v-model="temp.pic" placeholder="年限">
             <el-option
              v-for="item in options"
             :key="item.value"
@@ -44,6 +44,27 @@
           :loading="listLoading"
         >确定</el-button>
       </div>
+    </el-dialog>
+
+    <!-- 详情 -->
+    <el-dialog
+      title="场馆详情"
+      :visible.sync="detailDialogVisible"
+      append-to-body
+      v-if="list[editIndex]"
+    >
+      <el-form label-width="auto" style="margin-left: 50px;max-width: 500px">
+        <el-form-item label="场馆名称">
+          {{ list[editIndex].attributes.name }}
+        </el-form-item>
+        <el-form-item label="场馆预约开放周期">
+         {{ list[editIndex].attributes.pic }}
+        </el-form-item>
+
+        <el-form-item label="场馆图片">
+          <el-image></el-image>
+        </el-form-item>
+      </el-form>
     </el-dialog>
 
     <div class="header">
@@ -87,19 +108,19 @@
     </div>
 
     <el-card style="margin-top: 20px"
-      <el-table v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%">
+      <el-table v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%;margin-bottom: 10px">
         <el-table-column type="selection" width="55"> </el-table-column>
         <el-table-column property="name" label="场馆ID" width="120"><template slot-scope="scope">{{ scope.row.id }}</template>
         </el-table-column>
         <el-table-column label="场馆名称" width="120">
-          <template slot-scope="scope">{{ scope.row.venue_name }}</template>
+          <template slot-scope="scope">{{ scope.row.attributes.name }}</template>
         </el-table-column>
         <el-table-column
           property="address"
           label="场馆预约开放周期"
           show-overflow-tooltip
         >
-        <template slot-scope="scope">{{ scope.row.open_cycle }}</template>
+        <template slot-scope="scope">{{ scope.row.attributes.pic }}</template>
         </el-table-column>
         <el-table-column
           property="address"
@@ -124,7 +145,7 @@
               size="small"
               type="primary"
               circle
-              @click="updateActionType(0, $index)"
+              @click="updateActionType(0, row, $index)"
             ></el-button>
             <el-button
               icon="el-icon-delete"
@@ -132,9 +153,9 @@
               type="danger"
               :loading="listLoading"
               circle
-              @click="onDeleteVenue($index)"
+              @click="onDeleteVenue(row, $index)"
             ></el-button>
-            <el-button size="small" round>查看详情</el-button>
+            <el-button size="small" round @click="checkDetails($index)">查看详情</el-button>
             <el-button size="small" round @click="setOpenTime(row)">设置时间段</el-button>
             <!-- <el-dropdown>
             <el-button type="success">
@@ -153,7 +174,7 @@
       <el-pagination
       background
       layout="total, prev, pager, next, jumper"
-      :total="total"
+      :total="list.length"
       :page-size="10"
       :current-page.sync="currentPage"
       @current-change="onCurrentChange"
@@ -195,7 +216,7 @@ export default {
         },
       ],
       dialogVisible: false,
-      editDialogVisible:false,
+      detailDialogVisible:false,
       list: [],
       listLoading: false,
       venue: {},
@@ -204,7 +225,11 @@ export default {
       total: 0,
       currentPage: 1,
       actionType: 1,
-      editIndex: 0
+      editIndex: 0,
+      temp: {
+          name: '',
+          pic: ''
+      },
     };
   },
   computed: {},
@@ -214,63 +239,140 @@ export default {
   },
   mounted() {},
   methods: {
-    getList(currentPage = 1) {
+    // getList(currentPage = 1) {
+    //   this.listLoading = true;
+    //   getVenueList({
+    //     currentPage,
+    //     page_size: 10
+    //     }).then((res) => {
+    //     console.log(res.data.items);
+    //     this.list = res.data.items;
+    //     this.total = res.data.total
+    //     this.listLoading = false;
+    //   });
+    // },
+
+    getList() {
       this.listLoading = true;
-      getVenueList({
-        currentPage,
-        page_size: 10
-        }).then((res) => {
-        console.log(res.data.items);
-        this.list = res.data.items;
-        this.total = res.data.total
+      getVenueList().then((res) => {
+        console.log(res.data);
+        // this.list = res.data.items;
+        // this.total = res.data.total
+        this.list = res.data
         this.listLoading = false;
       });
     },
 
-    // 更新 dialog 标题
-    updateActionType(type, index = 0) {
+    // 更新 dialog 标题：1. 新增  2. 编辑
+    updateActionType(type, row = null, index = 0) {
+      // 需要编辑的场馆的index
       this.editIndex = index
+      const { name, pic } = this.list[index].attributes
+      // 编辑时显示上次编辑的内容，新增时显示空，增加用户体验
+      this.temp.name = row ? name : ''
+      this.temp.pic = row ? pic : ''
+      // 赋予数组要编辑场馆的id，使用编辑功能时才会传入row
+      if(row) this.temp.id = row.id
       this.actionType = type
       this.dialogVisible = true
     },
 
+    // 新增或编辑
+    // onUpdateVenue() {
+    //   this.listLoading = true
+    //   this.dialogVisible = false
+    //   let data = {
+    //     data: {
+    //       "type": "venues",
+    //       attributes: this.temp
+    //     }
+    //   }
+    //   if(this.actionType) {
+    //     addVenueItem({
+    //     venue_name: this.venueName,
+    //     open_cycle: this.openCycle
+    //   }).then(res => {
+    //     console.log(res)
+    //     this.listLoading = false
+    //     this.getList()
+    //     this.$notify({
+    //       title: '成功',
+    //       message: '新增场馆信息成功',
+    //       type: 'success'
+    //     });
+    //   })
+    //   }
+    //   else {
+    //     editVenueItem({
+    //     venue_name: this.venueName,
+    //     open_cycle: this.openCycle,
+    //     edit_index: this.editIndex
+    //   }).then(res => {
+    //     console.log(res)
+    //     this.listLoading = false
+    //     this.getList()
+    //     this.$notify({
+    //       title: '成功',
+    //       message: '编辑场馆信息成功',
+    //       type: 'success'
+    //     });
+    //   })
+    //   }
+    // },
+
+    // 新增或编辑
     onUpdateVenue() {
       this.listLoading = true
       this.dialogVisible = false
+      let temp = Object.assign({}, this.temp);
+
       if(this.actionType) {
-        addVenueItem({
-        venue_name: this.venueName,
-        open_cycle: this.openCycle
-      }).then(res => {
+        let createData = {
+        data: {
+          "type": "venues",
+          attributes: temp
+        }
+      }
+        addVenueItem(createData).then(res => {
         console.log(res)
+        this.list.push(res.data);
         this.listLoading = false
-        this.getList()
+        // this.getList()
         this.$notify({
           title: '成功',
           message: '新增场馆信息成功',
           type: 'success'
         });
+      }, err => {
+        console.log(err);
       })
-      }
+    }
       else {
-        editVenueItem({
-        venue_name: this.venueName,
-        open_cycle: this.openCycle,
-        edit_index: this.editIndex
-      }).then(res => {
+        let id = temp.id
+        delete temp.id
+        let editData = {
+          data: {
+            "type": "venues",
+            id,
+            attributes: temp
+          }
+        }
+        editVenueItem(editData, this.temp.id).then(res => {
         console.log(res)
         this.listLoading = false
-        this.getList()
+        this.list[this.editIndex] = res.data
         this.$notify({
           title: '成功',
           message: '编辑场馆信息成功',
           type: 'success'
         });
+      }, err => {
+        console.log(err);
       })
-      }
-    },
+    }
+  },
 
-    onDeleteVenue(index) {
+    onDeleteVenue(row, index) {
       this.actionType = '编辑场馆'
       this.$confirm('是否删除?', '提示', {
           confirmButtonText: '确定',
@@ -282,18 +384,23 @@ export default {
             type: 'success',
             message: '删除成功!'
           });
-          deleteVenueItem({index}).then(res => {
-          this.getList()
-          this.listLoading = false
-      })
+          deleteVenueItem(row.id).then(res => {
+            this.list.splice(index, 1);
+            this.listLoading = false
+          })
         }).catch(() => {
           this.$message({
             type: 'info',
             message: '已取消删除'
           });
+          this.listLoading = false
         });
+    },
 
-
+    // 查看详情
+    checkDetails(index) {
+      this.detailDialogVisible = true
+      this.editIndex = index
     },
 
     onCurrentChange() {

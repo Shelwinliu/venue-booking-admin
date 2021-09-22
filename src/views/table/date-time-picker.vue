@@ -1,8 +1,8 @@
 <template>
-  <div style="padding: 0 20px 20px">
-    <h3>当前时间：{{ showDate }}</h3>
+  <div style="padding: 20px">
+    <!-- <h3>当前时间：{{ showDate }}</h3> -->
 
-    <div style="display: flex; align-items: center">
+    <div style="display: flex;justify-content:center">
       <el-button type="text">选择月份</el-button>
       <el-pagination
         background
@@ -41,6 +41,7 @@
             type="time"
             placeholder="选择开始时间"
             format="HH : mm"
+            :minute-step="30"
             prefix-class="xmx"></date-picker>
           <span style="padding: 0 10px">至</span>
           <date-picker
@@ -48,6 +49,7 @@
             type="time"
             placeholder="选择结束时间"
             format="HH : mm"
+            :minute-step="30"
             prefix-class="xmx"></date-picker>
 
           <!-- <el-button
@@ -114,10 +116,10 @@ export default {
     };
   },
   computed: {
-    showDate() {
-      let date = new Date();
-      return formatDate(date, "yyyy-MM-dd");
-    },
+    // showDate() {
+    //   let date = new Date();
+    //   return formatDate(date, "yyyy-MM-dd");
+    // },
   },
   watch: {},
   created() {

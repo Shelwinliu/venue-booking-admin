@@ -38,7 +38,7 @@ const tableRouter = {
       hidden: true
     },
     {
-      path: 'arena',
+      path: 'ground',
       component: () => import('@/views/table/inline-edit-table'),
       name: 'InlineEditTable',
       meta: { title: '场地' }

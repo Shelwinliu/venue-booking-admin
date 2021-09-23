@@ -1,6 +1,12 @@
 import request from '@/utils/request'
 
-// 获取场馆列表
+// 获取所有场馆
+export function getVenueList() {
+  return request({
+    url: '/venues',
+    method: 'get'
+  })
+}
 // export function getVenueList(query) {
 //   return request({
 //     url: '/vue-element-admin/venue/list',
@@ -9,12 +15,15 @@ import request from '@/utils/request'
 //   })
 // }
 
-export function getVenueList() {
+// 获取场馆
+export function getVenue(id) {
   return request({
-    url: '/venues',
+    url: `/venues/${id}`,
     method: 'get'
   })
 }
+
+
 
 // 新增场馆
 // export function addVenueItem(body) {

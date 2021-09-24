@@ -60,12 +60,6 @@
 
         <el-form-item label="场馆图片">
           <el-image :src="list[editIndex].attributes.pic"></el-image>
-
-          <!-- <el-image>
-      <div slot="error" class="image-slot">
-        <i class="el-icon-picture-outline"></i>
-      </div>
-    </el-image> -->
         </el-form-item>
       </el-form>
     </el-dialog>
@@ -163,7 +157,9 @@ import {
 
 import ImageUpload from "./components/image-upload.vue";
 
-import { common } from "./components/mixin.js";
+import { common } from "@/mixin/index.js";
+
+import { delFunc } from "@/utils/index";
 
 export default {
   name: "InlineEditTable",
@@ -172,43 +168,6 @@ export default {
   mixins: [common],
   data() {
     return {
-      tableData: [
-        {
-          date: "2016-05-03",
-          name: "Tom",
-          address: "No. 189, Grove St, Los Angeles",
-        },
-        {
-          date: "2016-05-02",
-          name: "Tom",
-          address: "No. 189, Grove St, Los Angeles",
-        },
-        {
-          date: "2016-05-04",
-          name: "Tom",
-          address: "No. 189, Grove St, Los Angeles",
-        },
-        {
-          date: "2016-05-01",
-          name: "Tom",
-          address: "No. 189, Grove St, Los Angeles",
-        },
-        {
-          date: "2016-05-08",
-          name: "Tom",
-          address: "No. 189, Grove St, Los Angeles",
-        },
-        {
-          date: "2016-05-06",
-          name: "Tom",
-          address: "No. 189, Grove St, Los Angeles",
-        },
-        {
-          date: "2016-05-07",
-          name: "Tom",
-          address: "No. 189, Grove St, Los Angeles",
-        },
-      ],
       // 记录用户输入的场所内容
       temp: {
         name: "",
@@ -258,18 +217,6 @@ export default {
           });
         });
       });
-    },
-
-    // 更新 dialog 标题：1. 新增  2. 编辑
-    updateActionType(type, row = null, index = 0) {
-      // 需要编辑的场馆的index
-      this.editIndex = index;
-      // const { name, pic } = this.list[index].attributes;
-      // 编辑时显示上次编辑的内容，新增时显示空，增加用户体验
-      // this.temp.name = row ? name : "";
-      // this.temp.pic = row ? pic : "";
-      this.actionType = type;
-      this.dialogVisible = true;
     },
 
     onUpdateGround() {
@@ -335,36 +282,13 @@ export default {
       this.$refs.imageUpload.previewURL = "";
       this.$refs.imageUpload.isShowPlusIcon = true;
       // const { name, pic, id } = this.temp;
-      this.temp.name = "";
-      this.temp.pic = "";
-      this.temp.id = "";
+      // this.temp.name = "";
+      // this.temp.pic = "";
+      // this.temp.id = "";
     },
 
     deleteGround(row, index) {
-      this.$confirm("是否删除?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      })
-        .then(() => {
-          this.listLoading = true;
-          this.$message({
-            type: "success",
-            message: "删除成功!",
-          });
-          deleteGroundItem(row.id).then((res) => {
-            console.log(res);
-            this.list.splice(index, 1);
-            this.listLoading = false;
-          });
-        })
-        .catch(() => {
-          this.$message({
-            type: "info",
-            message: "已取消删除",
-          });
-          this.listLoading = false;
-        });
+      delFunc(this, deleteGroundItem, row, index);
     },
   },
 };

@@ -1,99 +1,240 @@
 <template>
-  <div class="errPage-container">
-    <el-button icon="el-icon-arrow-left" class="pan-back-btn" @click="back">
-      返回
-    </el-button>
-    <el-row>
-      <el-col :span="12">
-        <h1 class="text-jumbo text-ginormous">
-          Oops!
-        </h1>
-        gif来源<a href="https://zh.airbnb.com/" target="_blank">airbnb</a> 页面
-        <h2>你没有权限去该页面</h2>
-        <h6>如有不满请联系你领导</h6>
-        <ul class="list-unstyled">
-          <li>或者你可以去:</li>
-          <li class="link-type">
-            <router-link to="/dashboard">
-              回首页
-            </router-link>
-          </li>
-          <li class="link-type">
-            <a href="https://www.taobao.com/">随便看看</a>
-          </li>
-          <li><a href="#" @click.prevent="dialogVisible=true">点我看图</a></li>
-        </ul>
-      </el-col>
-      <el-col :span="12">
-        <img :src="errGif" width="313" height="428" alt="Girl has dropped her ice cream.">
-      </el-col>
-    </el-row>
-    <el-dialog :visible.sync="dialogVisible" title="随便看">
-      <img :src="ewizardClap" class="pan-img">
+  <div class="container">
+    <div class="header">
+      <el-button
+        type="success"
+        round
+        icon="el-icon-plus"
+        @click="updateActionType(1)"
+        >新增</el-button
+      >
+    </div>
+
+    <el-table
+      v-loading="listLoading"
+      :data="list"
+      border
+      fit
+      highlight-current-row
+      style="width: 100%; margin-bottom: 10px"
+    >
+      <el-table-column type="selection" width="55"> </el-table-column>
+      <el-table-column prop="id" label="策略ID" width="180"> </el-table-column>
+      <el-table-column prop="attributes.name" label="策略名称">
+      </el-table-column>
+      <el-table-column
+        prop="attributes.open-reservation-days"
+        label="开放预约天数"
+        width="180"
+      >
+      </el-table-column>
+
+      <el-table-column label="操作">
+        <template slot-scope="{ row, $index }">
+          <el-button
+            icon="el-icon-edit"
+            size="small"
+            type="primary"
+            circle
+            @click="updateActionType(0, row, $index)"
+          ></el-button>
+          <el-button
+            icon="el-icon-delete"
+            size="small"
+            type="danger"
+            circle
+            :loading="listLoading"
+            @click="onDeletePolicy(row, $index)"
+          ></el-button>
+          <el-button size="small" round @click="checkDetails($index)"
+            >查看详情</el-button
+          >
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <el-pagination
+      background
+      layout="total, prev, pager, next, jumper"
+      :total="list.length"
+      :page-size="10"
+      :current-page.sync="currentPage"
+      @current-change="onCurrentChange"
+    >
+    </el-pagination>
+
+    <!-- 新增或编辑 -->
+    <el-dialog
+      :visible.sync="dialogVisible"
+      append-to-body
+      :title="actionType ? '新增策略' : '编辑策略'"
+    >
+      <el-form
+        :model="temp"
+        ref="form"
+        label-width="auto"
+        style="margin-left: 50px; max-width: 500px"
+        :rules="rules"
+      >
+        <el-form-item label="策略名称" prop="name">
+          <el-input
+            v-model="temp.name"
+            placeholder="例如：篮球场开放策略（长度为 1 ~ 60 个字符）"
+            minlength="1"
+            maxlength="60"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="开放预约天数" prop="open-reservation-days">
+          <el-input
+            v-model.number.trim="temp['open-reservation-days']"
+            placeholder="例如：（必须为 0 ~ 999 之间的整数）"
+            maxlength="3"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input
+            type="textarea"
+            :rows="8"
+            placeholder="请输入内容"
+            v-model="temp.description"
+            maxlength="255"
+            show-word-limit
+            :clearable="true"
+          >
+          </el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="dialogVisible = false"> 取消 </el-button>
+        <el-button
+          type="primary"
+          :loading="listLoading"
+          @click="onUpdatePolicy"
+        >
+          确定
+        </el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 详情 -->
+    <el-dialog
+      title="策略详情"
+      :visible.sync="detailDialogVisible"
+      append-to-body
+      v-if="list[editIndex]"
+    >
+      <el-form label-width="auto" style="margin-left: 50px; max-width: 500px">
+        <el-form-item label="策略名称">
+          {{ list[editIndex].attributes.name }}
+        </el-form-item>
+        <el-form-item label="开放预约天数">
+          {{ list[editIndex].attributes["open-reservation-days"] }}
+        </el-form-item>
+        <el-form-item label="描述">
+          {{ list[editIndex].attributes.description }}
+        </el-form-item>
+      </el-form>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import errGif from '@/assets/401_images/401.gif'
+import {
+  getPolicyList,
+  createPolicy,
+  editPolicy,
+  deletePolicy,
+} from "@/api/policy.js";
+
+import { notifySuccess, notifyFail } from "@/utils/notify.js";
+import { delFunc } from "@/utils/index";
+
+import { common } from "@/mixin/index.js";
 
 export default {
-  name: 'Page401',
+  mixins: [common],
   data() {
     return {
-      errGif: errGif + '?' + +new Date(),
-      ewizardClap: 'https://wpimg.wallstcn.com/007ef517-bafd-4066-aae4-6883632d9646',
-      dialogVisible: false
-    }
+      temp: {
+        name: "",
+        "open-reservation-days": null,
+        description: "",
+      },
+      rules: {
+        name: [
+          { required: true, message: "策略名称不能为空", trigger: "blur" },
+        ],
+        "open-reservation-days": [
+          {
+            validator: (rule, value, callback) => {
+              if (value === null || value === "" || Number.isInteger(value))
+                callback();
+              else callback(new Error("必须为 0 ~ 999 之间的整数"));
+            },
+          },
+        ],
+      },
+    };
+  },
+  created() {
+    this.getList();
   },
   methods: {
-    back() {
-      if (this.$route.query.noGoBack) {
-        this.$router.push({ path: '/dashboard' })
-      } else {
-        this.$router.go(-1)
-      }
-    }
-  }
-}
+    getList() {
+      getPolicyList().then((res) => {
+        console.log(res);
+        this.list = res.data;
+      });
+    },
+
+    onUpdatePolicy() {
+      this.$refs.form.validate((valid) => {
+        if (valid) {
+          this.listLoading = true;
+          // 创建策略
+          if (this.actionType) {
+            let createData = {
+              data: {
+                type: "policies",
+                attributes: this.temp,
+              },
+            };
+            createPolicy(createData).then((res) => {
+              console.log(res);
+              notifySuccess(this, "创建策略成功");
+              this.listLoading = false;
+              this.dialogVisible = false;
+              this.list.push(res.data);
+            });
+          }
+          // 编辑策略
+          else {
+            let editData = {
+              data: {
+                type: "policies",
+                id: this.temp.id,
+                attributes: this.temp,
+              },
+            };
+            editPolicy(editData, this.temp.id).then((res) => {
+              console.log(res);
+              this.listLoading = false;
+              this.dialogVisible = false;
+              notifySuccess(this, "编辑策略信息成功");
+              this.list[this.editIndex] = res.data;
+            });
+          }
+        }
+      });
+    },
+
+    onDeletePolicy(row, index) {
+      delFunc(this, deletePolicy, row, index);
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>
-  .errPage-container {
-    width: 800px;
-    max-width: 100%;
-    margin: 100px auto;
-    .pan-back-btn {
-      background: #008489;
-      color: #fff;
-      border: none!important;
-    }
-    .pan-gif {
-      margin: 0 auto;
-      display: block;
-    }
-    .pan-img {
-      display: block;
-      margin: 0 auto;
-      width: 100%;
-    }
-    .text-jumbo {
-      font-size: 60px;
-      font-weight: 700;
-      color: #484848;
-    }
-    .list-unstyled {
-      font-size: 14px;
-      li {
-        padding-bottom: 5px;
-      }
-      a {
-        color: #008489;
-        text-decoration: none;
-        &:hover {
-          text-decoration: underline;
-        }
-      }
-    }
-  }
+@import "../../styles/tabel-layout.scss";
 </style>

@@ -244,33 +244,39 @@ export const asyncRoutes = [
     },
     children: [
       {
-        path: 'time_periods',
+        path: 'policies',
         component: () => import('@/views/error-page/401'),
-        name: 'Page401',
+        name: 'policies',
+        meta: { title: '创建策略', noCache: true }
+      },
+      {
+        path: 'time_periods',
+        component: () => import('@/views/error-page/404'),
+        name: 'time_periods',
         meta: { title: '开放时间', noCache: true }
       },
       {
         path: 'closed_week',
         component: () => import('@/views/error-page/404'),
-        name: 'Page404',
+        name: 'closed_week',
         meta: { title: '按周关闭场馆', noCache: true }
       },
       {
         path: 'closed_dates',
         component: () => import('@/views/error-page/404'),
-        name: 'Page404',
+        name: 'closed_dates',
         meta: { title: '关闭场馆开放日期', noCache: true }
       },
       {
         path: 'opened_week',
         component: () => import('@/views/error-page/404'),
-        name: 'Page404',
+        name: 'opened_week',
         meta: { title: '特殊日按周开放', noCache: true }
       },
       {
         path: 'opened_day',
         component: () => import('@/views/error-page/404'),
-        name: 'Page404',
+        name: 'opened_day',
         meta: { title: '特殊日按日期开放', noCache: true }
       }
     ]

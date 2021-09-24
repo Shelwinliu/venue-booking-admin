@@ -11,18 +11,21 @@
         <el-form-item label="场馆名称">
           <el-input v-model="temp.name" placeholder="例如：篮球馆"></el-input>
         </el-form-item>
-        <!-- <el-form-item label="场馆预约开放周期">
-         <div style="display:flex">
-          <el-select placeholder="年限">
+
+        <el-form-item label="关联策略">
+          <el-select
+            v-model="value1"
+            placeholder="请选择"
+            clearable
+            value-key="id">
             <el-option
-             v-for="item in options"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value">
-          </el-option>
+              v-for="item in options"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+            </el-option>
           </el-select>
-         </div>
-        </el-form-item> -->
+        </el-form-item>
 
         <el-form-item label="场馆图片">
           <image-upload v-model="temp.pic" ref="imageUpload"></image-upload>
@@ -56,12 +59,6 @@
 
         <el-form-item label="场馆图片">
           <el-image :src="list[editIndex].attributes.pic"></el-image>
-
-          <!-- <el-image>
-      <div slot="error" class="image-slot">
-        <i class="el-icon-picture-outline"></i>
-      </div>
-    </el-image> -->
         </el-form-item>
       </el-form>
     </el-dialog>
@@ -128,15 +125,6 @@
         >
         <template slot-scope="scope">{{ scope.row.open_time }}</template>
         </el-table-column>
-        <!-- <el-table-column
-          property="address"
-          label="场馆可预约时间"
-          show-overflow-tooltip
-        >
-        </el-table-column> -->
-        <!-- <el-table-column label="场馆图片" width="120">
-          <template slot-scope="scope"><el-image :src="scope.row.venue_image"></el-image></template>
-        </el-table-column> -->
         <el-table-column label="操作">
           <template slot-scope="{row,$index}">
             <el-button
@@ -192,9 +180,10 @@ import {
 } from "@/api/venue";
 
 import ImageUpload from "./components/image-upload.vue";
-import {common} from "./components/mixin.js"
+import { common } from "@/mixin/index.js";
 
 import { scrollTo } from "@/utils/scroll-to";
+import { delFunc } from "@/utils/index";
 
 export default {
   name: "ComplexTable",
@@ -226,8 +215,6 @@ export default {
       venue: {},
       venueName: "",
       openCycle: null,
-      total: 0,
-      currentPage: 1,
       temp: {
         name: "",
         pic: "",
@@ -259,31 +246,15 @@ export default {
       this.listLoading = true;
       getVenueList().then((res) => {
         console.log(res.data);
-        // this.list = res.data.items;
-        // this.total = res.data.total
         this.list = res.data;
         this.listLoading = false;
       });
-    },
-
-    // 更新 dialog 标题：1. 新增  2. 编辑
-    updateActionType(type, row = null, index = 0) {
-      // 需要编辑的场馆的index
-      this.editIndex = index;
-      // const { name, pic } = this.list[index].attributes;
-      // 编辑时显示上次编辑的内容，新增时显示空，增加用户体验
-      // this.temp.name = row ? name : "";
-      // 赋予数组要编辑场馆的id，使用编辑功能时才会传入row
-      if (row) this.temp.id = row.id;
-      this.actionType = type;
-      this.dialogVisible = true;
     },
 
     // 新增或编辑
     onUpdateVenue() {
       this.listLoading = true;
       this.dialogVisible = false;
-      let temp = Object.assign({}, this.temp);
 
       if (this.actionType) {
         let createData = {
@@ -309,7 +280,7 @@ export default {
           }
         );
       } else {
-        let id = temp.id;
+        let temp = Object.assign({}, this.temp);
         delete temp.id;
         let editData = {
           data: {
@@ -341,40 +312,12 @@ export default {
       this.$refs.imageUpload.previewURL = "";
       this.$refs.imageUpload.isShowPlusIcon = true;
       // const { name, pic } = this.temp;
-      this.temp.name = "";
-      this.temp.pic = "";
+      // this.temp.name = "";
+      // this.temp.pic = "";
     },
 
     onDeleteVenue(row, index) {
-      this.actionType = "编辑场馆";
-      this.$confirm("是否删除?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      })
-        .then(() => {
-          this.listLoading = true;
-          this.$message({
-            type: "success",
-            message: "删除成功!",
-          });
-          deleteVenueItem(row.id).then((res) => {
-            this.list.splice(index, 1);
-            this.listLoading = false;
-          });
-        })
-        .catch(() => {
-          this.$message({
-            type: "info",
-            message: "已取消删除",
-          });
-          this.listLoading = false;
-        });
-    },
-
-    onCurrentChange() {
-      this.getList(this.currentPage);
-      scrollTo(0, 800);
+      delFunc(this, deleteVenueItem, row, index);
     },
 
     // 设置开放时间

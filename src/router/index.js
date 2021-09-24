@@ -234,30 +234,47 @@ export const asyncRoutes = [
   //   ]
   // },
 
-  // {
-  //   path: '/error',
-  //   component: Layout,
-  //   redirect: 'noRedirect',
-  //   name: 'ErrorPages',
-  //   meta: {
-  //     title: 'Error Pages',
-  //     icon: '404'
-  //   },
-  //   children: [
-  //     {
-  //       path: '401',
-  //       component: () => import('@/views/error-page/401'),
-  //       name: 'Page401',
-  //       meta: { title: '401', noCache: true }
-  //     },
-  //     {
-  //       path: '404',
-  //       component: () => import('@/views/error-page/404'),
-  //       name: 'Page404',
-  //       meta: { title: '404', noCache: true }
-  //     }
-  //   ]
-  // },
+  {
+    path: '/open-policy',
+    component: Layout,
+    name: 'OpenPolicy',
+    meta: {
+      title: '开放策略',
+      icon: '404'
+    },
+    children: [
+      {
+        path: 'time_periods',
+        component: () => import('@/views/error-page/401'),
+        name: 'Page401',
+        meta: { title: '开放时间', noCache: true }
+      },
+      {
+        path: 'closed_week',
+        component: () => import('@/views/error-page/404'),
+        name: 'Page404',
+        meta: { title: '按周关闭场馆', noCache: true }
+      },
+      {
+        path: 'closed_dates',
+        component: () => import('@/views/error-page/404'),
+        name: 'Page404',
+        meta: { title: '关闭场馆开放日期', noCache: true }
+      },
+      {
+        path: 'opened_week',
+        component: () => import('@/views/error-page/404'),
+        name: 'Page404',
+        meta: { title: '特殊日按周开放', noCache: true }
+      },
+      {
+        path: 'opened_day',
+        component: () => import('@/views/error-page/404'),
+        name: 'Page404',
+        meta: { title: '特殊日按日期开放', noCache: true }
+      }
+    ]
+  },
 
   // {
   //   path: '/error-log',

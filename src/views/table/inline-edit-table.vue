@@ -43,6 +43,33 @@
       </div>
     </el-dialog>
 
+    <!-- 详情 -->
+    <el-dialog
+      title="场地详情"
+      :visible.sync="detailDialogVisible"
+      append-to-body
+      v-if="list[editIndex]"
+    >
+      <el-form label-width="auto" style="margin-left: 50px;max-width: 500px">
+        <el-form-item label="场所名称">
+          {{ list[editIndex].attributes.name }}
+        </el-form-item>
+        <el-form-item label="所属分类">
+         {{ list[editIndex].venue_name }}
+        </el-form-item>
+
+        <el-form-item label="场馆图片">
+          <el-image :src="list[editIndex].attributes.pic"></el-image>
+
+          <!-- <el-image>
+      <div slot="error" class="image-slot">
+        <i class="el-icon-picture-outline"></i>
+      </div>
+    </el-image> -->
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+
     <div class="header">
         <el-select
           v-model="value1"
@@ -116,6 +143,7 @@
               :loading="listLoading"
               @click="deleteGround(row, $index)"
             ></el-button>
+            <el-button size="small" round @click="checkDetails($index)">查看详情</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -135,10 +163,13 @@ import {
 
 import ImageUpload from "./components/image-upload.vue";
 
+import { common } from "./components/mixin.js";
+
 export default {
   name: "InlineEditTable",
   components: { ImageUpload },
   props: {},
+  mixins: [common],
   data() {
     return {
       tableData: [
@@ -178,20 +209,16 @@ export default {
           address: "No. 189, Grove St, Los Angeles",
         },
       ],
-      list: [],
       // 记录用户输入的场所内容
       temp: {
         name: "",
         pic: "",
+        // 记录场馆id
         id: "",
       },
-      listLoading: false,
       venueOptions: [],
       value1: "",
       value2: "",
-      dialogVisible: false,
-      actionType: 1,
-      editIndex: 0,
     };
   },
   computed: {},
@@ -221,6 +248,7 @@ export default {
       });
       getVenue_GroundList("venue").then((res) => {
         console.log(res);
+        // 存入了场地id
         this.list = res.data;
         // 匹配场地所属场馆类别
         res.included.forEach((included) => {
@@ -249,19 +277,19 @@ export default {
       // this.temp 含有id，temp 没有
       let temp = Object.assign({}, this.temp);
       delete temp.id;
-      let data = {
-        data: {
-          type: "grounds",
-          attributes: temp,
-          relationships: {
-            venue: {
-              data: { type: "venues", id: this.temp.id },
+      if (this.actionType) {
+        let createData = {
+          data: {
+            type: "grounds",
+            attributes: temp,
+            relationships: {
+              venue: {
+                data: { type: "venues", id: this.temp.id },
+              },
             },
           },
-        },
-      };
-      if (this.actionType) {
-        addGroundItem(data).then((res) => {
+        };
+        addGroundItem(createData).then((res) => {
           console.log(res);
           this.listLoading = false;
           this.dialogVisible = false;
@@ -273,7 +301,20 @@ export default {
           });
         });
       } else {
-        editGroundItem(data, this.temp.id).then((res) => {
+        const ground_id = this.list[this.editIndex].id;
+        let editData = {
+          data: {
+            type: "grounds",
+            id: ground_id,
+            attributes: temp,
+            relationships: {
+              venue: {
+                data: { type: "venues", id: this.temp.id },
+              },
+            },
+          },
+        };
+        editGroundItem(editData, ground_id).then((res) => {
           console.log(res);
           this.listLoading = false;
           this.dialogVisible = false;
@@ -293,7 +334,7 @@ export default {
       // 重新点击新增会重置url
       this.$refs.imageUpload.previewURL = "";
       this.$refs.imageUpload.isShowPlusIcon = true;
-      const { name, pic, id } = this.temp;
+      // const { name, pic, id } = this.temp;
       this.temp.name = "";
       this.temp.pic = "";
       this.temp.id = "";

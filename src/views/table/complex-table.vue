@@ -192,6 +192,7 @@ import {
 } from "@/api/venue";
 
 import ImageUpload from "./components/image-upload.vue";
+import {common} from "./components/mixin.js"
 
 import { scrollTo } from "@/utils/scroll-to";
 
@@ -199,6 +200,7 @@ export default {
   name: "ComplexTable",
   components: { ImageUpload },
   props: {},
+  mixins: [common],
   data() {
     return {
       value1: "",
@@ -221,17 +223,11 @@ export default {
           label: "4",
         },
       ],
-      dialogVisible: false,
-      detailDialogVisible: false,
-      list: [],
-      listLoading: false,
       venue: {},
       venueName: "",
       openCycle: null,
       total: 0,
       currentPage: 1,
-      actionType: 1,
-      editIndex: 0,
       temp: {
         name: "",
         pic: "",
@@ -374,12 +370,6 @@ export default {
           });
           this.listLoading = false;
         });
-    },
-
-    // 查看详情
-    checkDetails(index) {
-      this.detailDialogVisible = true;
-      this.editIndex = index;
     },
 
     onCurrentChange() {

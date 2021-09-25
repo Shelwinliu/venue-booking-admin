@@ -12,17 +12,16 @@
           <el-input v-model="temp.name" placeholder="例如：篮球馆"></el-input>
         </el-form-item>
 
-        <el-form-item label="关联策略">
+        <el-form-item label="所属策略">
           <el-select
-            v-model="value1"
+            v-model="relationships.policy.data.id"
             placeholder="请选择"
-            clearable
-            value-key="id">
+            clearable>
             <el-option
-              v-for="item in options"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value">
+              v-for="item in policyOpts"
+              :key="item.id"
+              :label="item.attributes.name"
+              :value="item.id">
             </el-option>
           </el-select>
         </el-form-item>
@@ -120,10 +119,10 @@
         </el-table-column>
         <el-table-column
           property="address"
-          label="场馆开放时间"
+          label="所属策略"
           show-overflow-tooltip
         >
-        <template slot-scope="scope">{{ scope.row.open_time }}</template>
+        <template slot-scope="scope">{{ scope.row.venue_policy}}</template>
         </el-table-column>
         <el-table-column label="操作">
           <template slot-scope="{row,$index}">
@@ -172,8 +171,10 @@
 </template>
 
 <script>
+import { getPolicyList } from "@/api/Policy/policy.js";
 import {
   getVenueList,
+  getVenue_PolicyList,
   addVenueItem,
   deleteVenueItem,
   editVenueItem,
@@ -212,7 +213,17 @@ export default {
           label: "4",
         },
       ],
-      venue: {},
+      // 策略选项
+      policyOpts: [],
+      // 场馆所关联的策略
+      relationships: {
+        policy: {
+          data: {
+            type: "policies",
+            id: "",
+          },
+        },
+      },
       venueName: "",
       openCycle: null,
       temp: {
@@ -225,6 +236,7 @@ export default {
   computed: {},
   watch: {},
   created() {
+    this.getPolicyOps();
     this.getList();
   },
   mounted() {},
@@ -242,12 +254,33 @@ export default {
     //   });
     // },
 
+    getPolicyOps() {
+      getPolicyList().then((res) => {
+        this.policyOpts = res.data;
+      });
+    },
+
     getList() {
       this.listLoading = true;
-      getVenueList().then((res) => {
-        console.log(res.data);
-        this.list = res.data;
+      // getVenueList().then((res) => {
+      //   this.list = res.data;
+      //   this.listLoading = false;
+      // });
+      getVenue_PolicyList("policy").then((res) => {
+        console.log(res);
         this.listLoading = false;
+        // 存入了场馆id
+        this.list = res.data;
+        // res.data.forEach(item => {
+        //   this.list.push(item)
+        // })
+        // 匹配场馆所属策略
+        res.included.forEach((included) => {
+          res.data.forEach((data, i) => {
+            if (included.id === data.relationships.policy.data.id)
+              this.list[i].venue_policy = included.attributes.name;
+          });
+        });
       });
     },
 
@@ -260,13 +293,17 @@ export default {
         let createData = {
           data: {
             type: "venues",
-            attributes: temp,
+            attributes: this.temp,
+            relationships: this.relationships,
           },
         };
         addVenueItem(createData).then(
           (res) => {
             console.log(res);
             this.list.push(res.data);
+            // 往新增加的场所中添加所属策略属性，因为获取与新增返回的数据结构不同
+            this.list[this.list.length - 1].venue_policy =
+              res.included[0].attributes.name;
             this.listLoading = false;
             // this.getList()
             this.$notify({
@@ -282,11 +319,13 @@ export default {
       } else {
         let temp = Object.assign({}, this.temp);
         delete temp.id;
+        const venue_id = this.list[this.editIndex].id;
         let editData = {
           data: {
             type: "venues",
-            id,
+            id: venue_id,
             attributes: temp,
+            relationships: this.relationships
           },
         };
         editVenueItem(editData, this.temp.id).then(
@@ -311,9 +350,6 @@ export default {
       // 重新点击新增会重置url
       this.$refs.imageUpload.previewURL = "";
       this.$refs.imageUpload.isShowPlusIcon = true;
-      // const { name, pic } = this.temp;
-      // this.temp.name = "";
-      // this.temp.pic = "";
     },
 
     onDeleteVenue(row, index) {

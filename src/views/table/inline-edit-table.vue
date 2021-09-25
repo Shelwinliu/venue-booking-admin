@@ -4,9 +4,9 @@
       :title="actionType ? '新增场所': '编辑场所'"
       :visible.sync="dialogVisible"
       append-to-body
-      @close="closeDialog"
+      @closed="closeDialog"
     >
-      <el-form label-width="auto"
+      <el-form label-width="100px"
         style="margin-left: 50px;max-width: 500px">
         <el-form-item label="场地名称">
           <el-input v-model="temp.name"  placeholder=""></el-input>
@@ -15,8 +15,7 @@
           <el-select
             v-model="temp.id"
             placeholder="请选择"
-            clearable
-            value-key="id">
+            clearable>
             <el-option
               v-for="item in venueOptions"
               :key="item.id"
@@ -41,27 +40,6 @@
           确定
         </el-button>
       </div>
-    </el-dialog>
-
-    <!-- 详情 -->
-    <el-dialog
-      title="场地详情"
-      :visible.sync="detailDialogVisible"
-      append-to-body
-      v-if="list[editIndex]"
-    >
-      <el-form label-width="auto" style="margin-left: 50px;max-width: 500px">
-        <el-form-item label="场所名称">
-          {{ list[editIndex].attributes.name }}
-        </el-form-item>
-        <el-form-item label="所属分类">
-         {{ list[editIndex].venue_name }}
-        </el-form-item>
-
-        <el-form-item label="场馆图片">
-          <el-image :src="list[editIndex].attributes.pic"></el-image>
-        </el-form-item>
-      </el-form>
     </el-dialog>
 
     <div class="header">
@@ -100,16 +78,17 @@
         </div>
       </div>
 
+    <!-- 表格 -->
     <el-card style="margin-top: 20px"
       <el-table v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%" :lazy="true">
         <el-table-column type="selection" width="55"> </el-table-column>
         <el-table-column label="场地ID" width="120">
           <template slot-scope="{row}">{{ row.id }}</template>
         </el-table-column>
-        <el-table-column property="name" label="场地名称" width="120">
+        <el-table-column label="场地名称" width="120">
           <template slot-scope="{row}">{{ row.attributes.name }}</template>
         </el-table-column>
-        <el-table-column property="name" label="所属分类" width="120">
+        <el-table-column label="所属分类" width="120">
           <template slot-scope="{row}">{{ row.venue_name }}</template>
         </el-table-column>
         <el-table-column
@@ -142,6 +121,27 @@
         </el-table-column>
       </el-table>
     </el-card>
+
+    <!-- 详情 -->
+    <el-dialog
+      title="场地详情"
+      :visible.sync="detailDialogVisible"
+      append-to-body
+      v-if="list[editIndex]"
+    >
+      <el-form label-width="auto" style="margin-left: 50px;max-width: 500px">
+        <el-form-item label="场所名称">
+          {{ list[editIndex].attributes.name }}
+        </el-form-item>
+        <el-form-item label="所属分类">
+         {{ list[editIndex].venue_name }}
+        </el-form-item>
+
+        <el-form-item label="场馆图片">
+          <el-image :src="list[editIndex].attributes.pic"></el-image>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 
@@ -201,10 +201,9 @@ export default {
 
     // 获取场所列表
     getList() {
-      getGroundList().then((res) => {
-        console.log(res);
-        // this.list = res.data;
-      });
+      // getGroundList().then((res) => {
+      //   console.log(res);
+      // });
       getVenue_GroundList("venue").then((res) => {
         console.log(res);
         // 存入了场地id
@@ -241,6 +240,10 @@ export default {
           this.listLoading = false;
           this.dialogVisible = false;
           this.list.push(res.data);
+          console.log(this.list[this.list.length - 1]);
+          // 往新增加的场所中添加场馆类别属性，因为获取与新增返回的数据结构不同
+          this.list[this.list.length - 1].venue_name =
+            res.included[0].attributes.name;
           this.$notify({
             title: "成功",
             message: "新增场地信息成功",
@@ -281,10 +284,6 @@ export default {
       // 重新点击新增会重置url
       this.$refs.imageUpload.previewURL = "";
       this.$refs.imageUpload.isShowPlusIcon = true;
-      // const { name, pic, id } = this.temp;
-      // this.temp.name = "";
-      // this.temp.pic = "";
-      // this.temp.id = "";
     },
 
     deleteGround(row, index) {

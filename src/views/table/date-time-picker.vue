@@ -85,8 +85,8 @@
 import { formatDate } from "@/utils/time-format";
 import getWeek from "@/utils/get-week";
 
-// import flatPickr from "vue-flatpickr-component";
-// import "flatpickr/dist/flatpickr.css";
+import flatPickr from "vue-flatpickr-component";
+import "flatpickr/dist/flatpickr.css";
 
 import DatePicker from "vue2-datepicker";
 import "@/styles/datepicker.scss";

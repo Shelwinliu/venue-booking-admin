@@ -144,7 +144,7 @@ import {
   createPolicy,
   editPolicy,
   deletePolicy,
-} from "@/api/policy.js";
+} from "@/api/Policy/policy.js";
 
 import { notifySuccess, notifyFail } from "@/utils/notify.js";
 import { delFunc } from "@/utils/index";

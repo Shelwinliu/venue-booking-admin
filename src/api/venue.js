@@ -23,7 +23,13 @@ export function getVenue(id) {
   })
 }
 
-
+// 获取有场馆关联的所有场地列表
+export function getVenue_PolicyList(relatedItem) {
+  return request({
+    url: `/venues?include=${relatedItem}`,
+    method: 'get',
+  })
+}
 
 // 新增场馆
 // export function addVenueItem(body) {

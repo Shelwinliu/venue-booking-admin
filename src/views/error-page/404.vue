@@ -19,14 +19,18 @@
       style="width: 100%; margin-bottom: 10px"
     >
       <el-table-column type="selection" width="55"> </el-table-column>
-      <el-table-column prop="id" label="策略ID" width="180"> </el-table-column>
-      <el-table-column prop="attributes.name" label="策略名称">
+      <el-table-column prop="id" label="时间段ID" width="180">
       </el-table-column>
-      <el-table-column
-        prop="attributes.open-reservation-days"
-        label="开放预约天数"
-        width="180"
-      >
+      <el-table-column prop="policy" label="所属策略" width="180">
+      </el-table-column>
+      <el-table-column label="开始时间 - 结束时间">
+        <template slot-scope="{ row }">
+          <i class="el-icon-time"></i>
+          <span style="margin-left: 10px"
+            >{{ row.attributes["start-time"] }} -
+            {{ row.attributes["stop-time"] }}</span
+          >
+        </template>
       </el-table-column>
 
       <el-table-column label="操作">
@@ -44,11 +48,8 @@
             type="danger"
             circle
             :loading="listLoading"
-            @click="onDeletePolicy(row, $index)"
+            @click="onDeleteTimePeriod(row, $index)"
           ></el-button>
-          <el-button size="small" round @click="checkDetails($index)"
-            >查看详情</el-button
-          >
         </template>
       </el-table-column>
     </el-table>
@@ -67,7 +68,7 @@
     <el-dialog
       :visible.sync="dialogVisible"
       append-to-body
-      :title="actionType ? '新增策略' : '编辑策略'"
+      :title="actionType ? '新增开放时间段' : '编辑开放时间段'"
     >
       <el-form
         :model="temp"
@@ -76,34 +77,46 @@
         style="margin-left: 50px; max-width: 500px"
         :rules="rules"
       >
-        <el-form-item label="策略名称" prop="name">
-          <el-select v-model="temp.name" placeholder="请选择">
+        <!-- <el-form-item label="时间段名称">
+          <el-input v-model="temp.name" placeholder=""></el-input>
+        </el-form-item> -->
+        <el-form-item label="策略名称" prop="id">
+          <el-select
+            v-model="temp.id"
+            placeholder="请选择"
+          >
             <el-option
-              v-for="item in policyOps"
+              v-for="item in policyOpts"
               :key="item.id"
-              :label="item.attributes.name"
+              :label="item.attributes.name + '(' + item.id + ')'"
               :value="item.id"
             >
             </el-option>
           </el-select>
         </el-form-item>
 
-        <el-form-item label="描述">
-          <date-picker
-            type="time"
-            placeholder="选择开始时间"
-            format="HH : mm"
-            :minute-step="30"
-            prefix-class="xmx"
-          ></date-picker>
-          <span style="padding: 0 10px">至</span>
-          <date-picker
-            type="time"
-            placeholder="选择结束时间"
-            format="HH : mm"
-            :minute-step="30"
-            prefix-class="xmx"
-          ></date-picker>
+        <el-form-item label="开放时间段">
+          <div style="margin-bottom: 20px; display: flex; align-items: center">
+            <date-picker
+              v-model="temp['start-time']"
+              type="time"
+              value-type="HH:mm:ss"
+              placeholder="选择开始时间"
+              format="HH : mm"
+              :minute-step="30"
+              prefix-class="xmx"
+            ></date-picker>
+            <span style="padding: 0 10px">至</span>
+            <date-picker
+              v-model="temp['stop-time']"
+              type="time"
+              value-type="HH:mm:ss"
+              placeholder="选择结束时间"
+              format="HH : mm"
+              :minute-step="30"
+              prefix-class="xmx"
+            ></date-picker>
+          </div>
         </el-form-item>
       </el-form>
       <div slot="footer">
@@ -111,42 +124,24 @@
         <el-button
           type="primary"
           :loading="listLoading"
-          @click="onUpdatePolicy"
+          @click="onUpdateTimePeriod"
         >
           确定
         </el-button>
       </div>
     </el-dialog>
-
-    <!-- 详情 -->
-    <el-dialog
-      title="策略详情"
-      :visible.sync="detailDialogVisible"
-      append-to-body
-      v-if="list[editIndex]"
-    >
-      <el-form label-width="auto" style="margin-left: 50px; max-width: 500px">
-        <el-form-item label="策略名称">
-          {{ list[editIndex].attributes.name }}
-        </el-form-item>
-        <el-form-item label="开放预约天数">
-          {{ list[editIndex].attributes["open-reservation-days"] }}
-        </el-form-item>
-        <el-form-item label="描述">
-          {{ list[editIndex].attributes.description }}
-        </el-form-item>
-      </el-form>
-    </el-dialog>
   </div>
 </template>
 
 <script>
+import { getPolicyList, editPolicy } from "@/api/Policy/policy.js";
 import {
-  getPolicyList,
-  createPolicy,
-  editPolicy,
-  deletePolicy,
-} from "@/api/policy.js";
+  getTimePeriod,
+  getPolicy_TimePeriod,
+  createTimePeriod,
+  deleteTimePeriod,
+  editTimePeriod,
+} from "@/api/Policy/time-periods.js";
 
 import { notifySuccess, notifyFail } from "@/utils/notify.js";
 import { delFunc } from "@/utils/index";
@@ -162,25 +157,15 @@ export default {
   components: { DatePicker },
   data() {
     return {
-      policyOps: [],
+      policyOpts: [],
       temp: {
-        name: "",
-        "open-reservation-days": null,
-        description: "",
+        // 记录策略
+        id: "",
+        "start-time": "",
+        "stop-time": "",
       },
       rules: {
-        name: [
-          { required: true, message: "策略名称不能为空", trigger: "blur" },
-        ],
-        "open-reservation-days": [
-          {
-            validator: (rule, value, callback) => {
-              if (value === null || value === "" || Number.isInteger(value))
-                callback();
-              else callback(new Error("必须为 0 ~ 999 之间的整数"));
-            },
-          },
-        ],
+        id: [{ required: true, message: "策略名称不能为空", trigger: "blur" }],
       },
     };
   },
@@ -192,32 +177,48 @@ export default {
     getPolicyOps() {
       getPolicyList().then((res) => {
         console.log(res);
-        this.policyOps = res.data;
+        this.policyOpts = res.data;
       });
     },
 
     getList() {
-      getPolicyList().then((res) => {
+      getPolicy_TimePeriod("policy").then((res) => {
         console.log(res);
         this.list = res.data;
+        res.included.forEach((included) => {
+          res.data.forEach((data, i) => {
+            if (included.id === data.relationships.policy.data.id)
+              this.list[i].policy = included.attributes.name;
+          });
+        });
       });
     },
 
-    onUpdatePolicy() {
+    onUpdateTimePeriod() {
       this.$refs.form.validate((valid) => {
         if (valid) {
           this.listLoading = true;
-          // 创建策略
+          let temp = Object.assign({}, this.temp);
+          delete temp.id;
+          // 创建开放时间段
           if (this.actionType) {
             let createData = {
               data: {
-                type: "policies",
-                attributes: this.temp,
+                type: "time-periods",
+                attributes: temp,
+                relationships: {
+                  policy: {
+                    data: {
+                      type: "policies",
+                      id: this.temp.id,
+                    },
+                  },
+                },
               },
             };
-            createPolicy(createData).then((res) => {
+            createTimePeriod(createData).then((res) => {
               console.log(res);
-              notifySuccess(this, "创建策略成功");
+              notifySuccess(this, "创建开放时间段成功");
               this.listLoading = false;
               this.dialogVisible = false;
               this.list.push(res.data);
@@ -225,18 +226,24 @@ export default {
           }
           // 编辑策略
           else {
+            const policy_id = this.list[this.editIndex].id;
             let editData = {
               data: {
-                type: "policies",
-                id: this.temp.id,
-                attributes: this.temp,
+                type: "grounds",
+                id: policy_id,
+                attributes: temp,
+                relationships: {
+                  policy: {
+                    data: { type: "policies", id: this.temp.id },
+                  },
+                },
               },
             };
-            editPolicy(editData, this.temp.id).then((res) => {
+            editTimePeriod(editData, this.temp.id).then((res) => {
               console.log(res);
               this.listLoading = false;
               this.dialogVisible = false;
-              notifySuccess(this, "编辑策略信息成功");
+              notifySuccess(this, "编辑时间段信息成功");
               this.list[this.editIndex] = res.data;
             });
           }
@@ -244,8 +251,8 @@ export default {
       });
     },
 
-    onDeletePolicy(row, index) {
-      delFunc(this, deletePolicy, row, index);
+    onDeleteTimePeriod(row, index) {
+      delFunc(this, deleteTimePeriod, row, index);
     },
   },
 };

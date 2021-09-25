@@ -26,7 +26,7 @@ export function editPolicy(data, id) {
   })
 }
 
-// 删除场地
+// 删除策略
 export function deletePolicy(id) {
   return request({
     url: `/policies/${id}`,

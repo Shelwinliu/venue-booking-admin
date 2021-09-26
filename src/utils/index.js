@@ -1,3 +1,83 @@
+import { notifySuccess, notifyFail } from "@/utils/notify.js";
+import { getPolicyList } from "@/api/Policy/policy.js";
+
+export function getAssociatedList(that, getInclude_api, type) {
+  that.listLoading = true
+  getInclude_api(type).then(
+    res => {
+      console.log(res);
+      that.listLoading = false;
+      that.list = res.data;
+      // res.data.forEach(item => {
+      //   this.list.push(item)
+      // })
+      // 匹配主体所属关联
+      if (res.data.length)
+        res.included.forEach(included => {
+          res.data.forEach((data, i) => {
+            if (included.id === data.relationships[type].data.id)
+              that.list[i].related_item = included.attributes.name;
+          });
+        });
+    },
+    err => {
+      console.log(err);
+      that.listLoading = false;
+      that.$message.error("获取信息失败");
+    }
+  );
+}
+
+// 获取策略选项
+export function getPolicyOpts(that) {
+  getPolicyList().then((res) => {
+    that.policyOpts = res.data;
+  });
+}
+
+// 抽取新增方法
+export function createFunc(that, create_api, createData) {
+  create_api(createData).then(
+    res => {
+      console.log(res);
+      that.list.push(res.data);
+      // 往新增加的场所中添加所属策略属性，因为获取与新增返回的数据结构不同
+      if(res.included)
+      that.list[that.list.length - 1].related_item =
+        res.included[0].attributes.name;
+      that.listLoading = false;
+      that.dialogVisible = false;
+      notifySuccess(that, "创建信息成功");
+    },
+    err => {
+      console.log(err);
+      notifyFail(that, "创建信息失败");
+      that.listLoading = false;
+    }
+  );
+}
+
+// 抽取编辑方法
+export function editFunc(that, edit_api, editData) {
+  edit_api(editData, editData.data.id).then(
+    res => {
+      console.log(res);
+      that.list[that.editIndex] = res.data;
+      // 往新增加的场所中添加所属策略属性，因为获取与新增返回的数据结构不同
+      if(res.included)
+      that.list[that.editIndex].related_item = res.included[0].attributes.name;
+      that.listLoading = false;
+      that.dialogVisible = false;
+      notifySuccess(that, "更新信息成功");
+    },
+    err => {
+      console.log(err);
+      notifyFail(that, "更新信息失败");
+      that.listLoading = false;
+    }
+  );
+}
+
 // 抽取删除方法
 export function delFunc(that, del_api, row, index) {
   that
@@ -24,32 +104,6 @@ export function delFunc(that, del_api, row, index) {
       });
       that.listLoading = false;
     });
-}
-
-// 抽取创建方法
-export function createFunc(that, create_api, type, temp) {
-  let createData = {
-    data: {
-      type,
-      attributes: temp,
-      relationships: {
-        venue: {
-          data: { type: "venues", id: this.temp.id }
-        }
-      }
-    }
-  };
-  addGroundItem(createData).then(res => {
-    console.log(res);
-    this.listLoading = false;
-    this.dialogVisible = false;
-    this.list.push(res.data);
-    this.$notify({
-      title: "成功",
-      message: "新增场地信息成功",
-      type: "success"
-    });
-  });
 }
 
 /**

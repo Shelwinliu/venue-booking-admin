@@ -1,5 +1,41 @@
 <template>
   <div class="container">
+    <div class="header">
+        <el-select
+          v-model="value1"
+          filterable
+          placeholder="请选择"
+          clearable
+        >
+          <el-option label="场地名称" value="1"></el-option>
+          <el-option label="所属分类" value="2"></el-option>
+          <el-option label="场馆开放时间" value="3"></el-option>
+        </el-select>
+        <el-select
+          v-if="value1"
+          v-model="value2"
+          slot="prepend"
+          filterable
+          placeholder="请选择"
+          clearable
+        >
+          <el-option label="1" value="1"></el-option>
+          <el-option label="2" value="2"></el-option>
+          <el-option label="3" value="3"></el-option>
+        </el-select>
+
+        <div>
+          <el-button type="primary" round icon="el-icon-search">搜索</el-button>
+          <el-button
+            type="success"
+            round
+            icon="el-icon-plus"
+            @click="updateActionType(1)"
+            >新增</el-button
+          >
+        </div>
+      </div>
+
     <el-dialog
       :title="actionType ? '新增场所': '编辑场所'"
       :visible.sync="dialogVisible"
@@ -42,42 +78,6 @@
       </div>
     </el-dialog>
 
-    <div class="header">
-        <el-select
-          v-model="value1"
-          filterable
-          placeholder="请选择"
-          clearable
-        >
-          <el-option label="场地名称" value="1"></el-option>
-          <el-option label="所属分类" value="2"></el-option>
-          <el-option label="场馆开放时间" value="3"></el-option>
-        </el-select>
-        <el-select
-          v-if="value1"
-          v-model="value2"
-          slot="prepend"
-          filterable
-          placeholder="请选择"
-          clearable
-        >
-          <el-option label="1" value="1"></el-option>
-          <el-option label="2" value="2"></el-option>
-          <el-option label="3" value="3"></el-option>
-        </el-select>
-
-        <div>
-          <el-button type="primary" round icon="el-icon-search">搜索</el-button>
-          <el-button
-            type="success"
-            round
-            icon="el-icon-plus"
-            @click="updateActionType(1)"
-            >新增</el-button
-          >
-        </div>
-      </div>
-
     <!-- 表格 -->
     <el-card style="margin-top: 20px"
       <el-table v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%" :lazy="true">
@@ -89,7 +89,7 @@
           <template slot-scope="{row}">{{ row.attributes.name }}</template>
         </el-table-column>
         <el-table-column label="所属分类" width="120">
-          <template slot-scope="{row}">{{ row.venue_name }}</template>
+          <template slot-scope="{row}">{{ row.related_item }}</template>
         </el-table-column>
         <el-table-column
           property="address"
@@ -134,7 +134,7 @@
           {{ list[editIndex].attributes.name }}
         </el-form-item>
         <el-form-item label="所属分类">
-         {{ list[editIndex].venue_name }}
+         {{ list[editIndex].related_item }}
         </el-form-item>
 
         <el-form-item label="场馆图片">
@@ -159,7 +159,13 @@ import ImageUpload from "./components/image-upload.vue";
 
 import { common } from "@/mixin/index.js";
 
-import { delFunc } from "@/utils/index";
+import {
+  getAssociatedList,
+  createFunc,
+  editFunc,
+  delFunc,
+} from "@/utils/index";
+import { notifySuccess, notifyFail } from "@/utils/notify.js";
 
 export default {
   name: "InlineEditTable",
@@ -193,9 +199,11 @@ export default {
       getVenueList().then((res) => {
         // console.log(res);
         // this.options = res.data.items
-        res.data.forEach((element) => {
-          this.venueOptions.push(element);
-        });
+        // if (res.data.length)
+        //   res.data.forEach((element) => {
+        //     this.venueOptions.push(element);
+        //   });
+        this.venueOptions = res.data;
       });
     },
 
@@ -204,18 +212,7 @@ export default {
       // getGroundList().then((res) => {
       //   console.log(res);
       // });
-      getVenue_GroundList("venue").then((res) => {
-        console.log(res);
-        // 存入了场地id
-        this.list = res.data;
-        // 匹配场地所属场馆类别
-        res.included.forEach((included) => {
-          res.data.forEach((data, i) => {
-            if (included.id === data.relationships.venue.data.id)
-              this.list[i].venue_name = included.attributes.name;
-          });
-        });
-      });
+      getAssociatedList(this, getVenue_GroundList, "venue");
     },
 
     onUpdateGround() {
@@ -223,33 +220,24 @@ export default {
       // this.temp 含有id，temp 没有
       let temp = Object.assign({}, this.temp);
       delete temp.id;
+      const relationships = {
+        venue: {
+          data: {
+            type: "venues",
+            id: this.temp.id,
+          },
+        },
+      };
+
       if (this.actionType) {
         let createData = {
           data: {
             type: "grounds",
             attributes: temp,
-            relationships: {
-              venue: {
-                data: { type: "venues", id: this.temp.id },
-              },
-            },
+            relationships,
           },
         };
-        addGroundItem(createData).then((res) => {
-          console.log(res);
-          this.listLoading = false;
-          this.dialogVisible = false;
-          this.list.push(res.data);
-          console.log(this.list[this.list.length - 1]);
-          // 往新增加的场所中添加场馆类别属性，因为获取与新增返回的数据结构不同
-          this.list[this.list.length - 1].venue_name =
-            res.included[0].attributes.name;
-          this.$notify({
-            title: "成功",
-            message: "新增场地信息成功",
-            type: "success",
-          });
-        });
+        createFunc(this, addGroundItem, createData)
       } else {
         const ground_id = this.list[this.editIndex].id;
         let editData = {
@@ -257,26 +245,10 @@ export default {
             type: "grounds",
             id: ground_id,
             attributes: temp,
-            relationships: {
-              venue: {
-                data: { type: "venues", id: this.temp.id },
-              },
-            },
+            relationships,
           },
         };
-        editGroundItem(editData, ground_id).then((res) => {
-          console.log(res);
-          this.listLoading = false;
-          this.dialogVisible = false;
-          this.list[this.editIndex] = res.data;
-          this.list[this.editIndex].venue_name =
-            res.included[0].attributes.name;
-          this.$notify({
-            title: "成功",
-            message: "编辑场地信息成功",
-            type: "success",
-          });
-        });
+        editFunc(this, editGroundItem, editData)
       }
     },
 

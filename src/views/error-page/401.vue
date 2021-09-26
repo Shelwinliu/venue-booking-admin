@@ -72,7 +72,7 @@
       <el-form
         :model="temp"
         ref="form"
-        label-width="auto"
+        label-width="100px"
         style="margin-left: 50px; max-width: 500px"
         :rules="rules"
       >
@@ -147,7 +147,7 @@ import {
 } from "@/api/Policy/policy.js";
 
 import { notifySuccess, notifyFail } from "@/utils/notify.js";
-import { delFunc } from "@/utils/index";
+import { createFunc, delFunc, editFunc } from "@/utils/index";
 
 import { common } from "@/mixin/index.js";
 
@@ -182,6 +182,7 @@ export default {
   methods: {
     getList() {
       getPolicyList().then((res) => {
+        console.log(res.included);
         console.log(res);
         this.list = res.data;
       });
@@ -199,30 +200,19 @@ export default {
                 attributes: this.temp,
               },
             };
-            createPolicy(createData).then((res) => {
-              console.log(res);
-              notifySuccess(this, "创建策略成功");
-              this.listLoading = false;
-              this.dialogVisible = false;
-              this.list.push(res.data);
-            });
+            createFunc(this, createPolicy, createData);
           }
           // 编辑策略
           else {
+            const policy_id = this.list[this.editIndex].id;
             let editData = {
               data: {
                 type: "policies",
-                id: this.temp.id,
+                id: policy_id,
                 attributes: this.temp,
               },
             };
-            editPolicy(editData, this.temp.id).then((res) => {
-              console.log(res);
-              this.listLoading = false;
-              this.dialogVisible = false;
-              notifySuccess(this, "编辑策略信息成功");
-              this.list[this.editIndex] = res.data;
-            });
+            editFunc(this, editPolicy, editData);
           }
         }
       });

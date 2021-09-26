@@ -1,16 +1,16 @@
-import Vue from 'vue'
-import Router from 'vue-router'
+import Vue from "vue";
+import Router from "vue-router";
 
-Vue.use(Router)
+Vue.use(Router);
 
 /* Layout */
-import Layout from '@/layout'
+import Layout from "@/layout";
 
 /* Router Modules */
-import componentsRouter from './modules/components'
-import chartsRouter from './modules/charts'
-import tableRouter from './modules/table'
-import nestedRouter from './modules/nested'
+import componentsRouter from "./modules/components";
+import chartsRouter from "./modules/charts";
+import tableRouter from "./modules/table";
+import nestedRouter from "./modules/nested";
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -40,46 +40,46 @@ import nestedRouter from './modules/nested'
  */
 export const constantRoutes = [
   {
-    path: '/redirect',
+    path: "/redirect",
     component: Layout,
     hidden: true,
     children: [
       {
-        path: '/redirect/:path(.*)',
-        component: () => import('@/views/redirect/index')
+        path: "/redirect/:path(.*)",
+        component: () => import("@/views/redirect/index")
       }
     ]
   },
   {
-    path: '/login',
-    component: () => import('@/views/login/index'),
+    path: "/login",
+    component: () => import("@/views/login/index"),
     hidden: true
   },
   {
-    path: '/auth-redirect',
-    component: () => import('@/views/login/auth-redirect'),
+    path: "/auth-redirect",
+    component: () => import("@/views/login/auth-redirect"),
     hidden: true
   },
   {
-    path: '/404',
-    component: () => import('@/views/error-page/404'),
+    path: "/404",
+    component: () => import("@/views/error-page/404"),
     hidden: true
   },
   {
-    path: '/401',
-    component: () => import('@/views/error-page/401'),
+    path: "/401",
+    component: () => import("@/views/error-page/401"),
     hidden: true
   },
   {
-    path: '/',
+    path: "/",
     component: Layout,
-    redirect: '/home',
+    redirect: "/home",
     children: [
       {
-        path: 'home',
-        component: () => import('@/views/dashboard/index'),
-        name: 'Dashboard',
-        meta: { title: '首页', icon: 'dashboard', affix: true }
+        path: "home",
+        component: () => import("@/views/dashboard/index"),
+        name: "Dashboard",
+        meta: { title: "首页", icon: "dashboard", affix: true }
       }
     ]
   },
@@ -109,20 +109,20 @@ export const constantRoutes = [
   //   ]
   // },
   {
-    path: '/profile',
+    path: "/profile",
     component: Layout,
-    redirect: '/profile/index',
+    redirect: "/profile/index",
     hidden: true,
     children: [
       {
-        path: 'index',
-        component: () => import('@/views/profile/index'),
-        name: 'Profile',
-        meta: { title: 'Profile', icon: 'user', noCache: true }
+        path: "index",
+        component: () => import("@/views/profile/index"),
+        name: "Profile",
+        meta: { title: "Profile", icon: "user", noCache: true }
       }
     ]
   }
-]
+];
 
 /**
  * asyncRoutes
@@ -191,12 +191,12 @@ export const asyncRoutes = [
   tableRouter,
 
   {
-    path: '',
+    path: "",
     component: Layout,
-    name: 'Example',
+    name: "Example",
     meta: {
-      title: '预约管理',
-      icon: 'el-icon-s-help'
+      title: "预约管理",
+      icon: "el-icon-s-help"
     },
     children: [
       // {
@@ -213,10 +213,10 @@ export const asyncRoutes = [
       //   hidden: true
       // },
       {
-        path: 'booking-management',
-        component: () => import('@/views/example/list'),
-        name: 'ArticleList',
-        meta: { title: '预约管理', icon: 'list' }
+        path: "booking-management",
+        component: () => import("@/views/example/list"),
+        name: "ArticleList",
+        meta: { title: "预约管理", icon: "list" }
       }
     ]
   },
@@ -235,49 +235,49 @@ export const asyncRoutes = [
   // },
 
   {
-    path: '/open-policy',
+    path: "/open-policy",
     component: Layout,
-    name: 'OpenPolicy',
+    name: "OpenPolicy",
     meta: {
-      title: '开放策略',
-      icon: '404'
+      title: "开放策略",
+      icon: "404"
     },
     children: [
       {
-        path: 'policies',
-        component: () => import('@/views/error-page/401'),
-        name: 'policies',
-        meta: { title: '创建策略', noCache: true }
+        path: "policies",
+        component: () => import("@/views/error-page/401"),
+        name: "policies",
+        meta: { title: "创建策略" }
       },
       {
-        path: 'time_periods',
-        component: () => import('@/views/error-page/404'),
-        name: 'time_periods',
-        meta: { title: '开放时间', noCache: true }
+        path: "time_periods",
+        component: () => import("@/views/error-page/404"),
+        name: "time_periods",
+        meta: { title: "开放时间" }
       },
       {
-        path: 'closed_week',
-        component: () => import('@/views/error-page/404'),
-        name: 'closed_week',
-        meta: { title: '按周关闭场馆', noCache: true }
+        path: "closed_week",
+        component: () => import("@/views/error-page/closed-weeks"),
+        name: "closed_week",
+        meta: { title: "按周关闭场馆" }
       },
       {
-        path: 'closed_dates',
-        component: () => import('@/views/error-page/404'),
-        name: 'closed_dates',
-        meta: { title: '关闭场馆开放日期', noCache: true }
+        path: "closed_dates",
+        component: () => import("@/views/error-page/404"),
+        name: "closed_dates",
+        meta: { title: "关闭场馆开放日期" }
       },
       {
-        path: 'opened_week',
-        component: () => import('@/views/error-page/404'),
-        name: 'opened_week',
-        meta: { title: '特殊日按周开放', noCache: true }
+        path: "opened_week",
+        component: () => import("@/views/error-page/404"),
+        name: "opened_week",
+        meta: { title: "特殊日按周开放", noCache: true }
       },
       {
-        path: 'opened_day',
-        component: () => import('@/views/error-page/404'),
-        name: 'opened_day',
-        meta: { title: '特殊日按日期开放', noCache: true }
+        path: "opened_day",
+        component: () => import("@/views/error-page/404"),
+        name: "opened_day",
+        meta: { title: "特殊日按日期开放", noCache: true }
       }
     ]
   },
@@ -406,21 +406,22 @@ export const asyncRoutes = [
   // },
 
   // 404 page must be placed at the end !!!
-  { path: '*', redirect: '/404', hidden: true }
-]
+  { path: "*", redirect: "/404", hidden: true }
+];
 
-const createRouter = () => new Router({
-  // mode: 'history', // require service support
-  scrollBehavior: () => ({ y: 0 }),
-  routes: constantRoutes
-})
+const createRouter = () =>
+  new Router({
+    // mode: 'history', // require service support
+    scrollBehavior: () => ({ y: 0 }),
+    routes: constantRoutes
+  });
 
-const router = createRouter()
+const router = createRouter();
 
 // Detail see: https://github.com/vuejs/vue-router/issues/1234#issuecomment-357941465
 export function resetRouter() {
-  const newRouter = createRouter()
-  router.matcher = newRouter.matcher // reset router
+  const newRouter = createRouter();
+  router.matcher = newRouter.matcher; // reset router
 }
 
-export default router
+export default router;

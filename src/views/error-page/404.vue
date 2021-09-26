@@ -21,7 +21,7 @@
       <el-table-column type="selection" width="55"> </el-table-column>
       <el-table-column prop="id" label="时间段ID" width="180">
       </el-table-column>
-      <el-table-column prop="policy" label="所属策略" width="180">
+      <el-table-column prop="related_item" label="所属策略" width="180">
       </el-table-column>
       <el-table-column label="开始时间 - 结束时间">
         <template slot-scope="{ row }">
@@ -73,22 +73,16 @@
       <el-form
         :model="temp"
         ref="form"
-        label-width="auto"
+        label-width="100px"
         style="margin-left: 50px; max-width: 500px"
         :rules="rules"
       >
-        <!-- <el-form-item label="时间段名称">
-          <el-input v-model="temp.name" placeholder=""></el-input>
-        </el-form-item> -->
-        <el-form-item label="策略名称" prop="id">
-          <el-select
-            v-model="temp.id"
-            placeholder="请选择"
-          >
+        <el-form-item label="所属策略" prop="id">
+          <el-select v-model="temp.id" placeholder="请选择">
             <el-option
               v-for="item in policyOpts"
               :key="item.id"
-              :label="item.attributes.name + '(' + item.id + ')'"
+              :label="item.attributes.name"
               :value="item.id"
             >
             </el-option>
@@ -144,7 +138,7 @@ import {
 } from "@/api/Policy/time-periods.js";
 
 import { notifySuccess, notifyFail } from "@/utils/notify.js";
-import { delFunc } from "@/utils/index";
+import { getAssociatedList, delFunc, createFunc, editFunc } from "@/utils/index";
 
 import { common } from "@/mixin/index.js";
 
@@ -182,16 +176,8 @@ export default {
     },
 
     getList() {
-      getPolicy_TimePeriod("policy").then((res) => {
-        console.log(res);
-        this.list = res.data;
-        res.included.forEach((included) => {
-          res.data.forEach((data, i) => {
-            if (included.id === data.relationships.policy.data.id)
-              this.list[i].policy = included.attributes.name;
-          });
-        });
-      });
+      this.listLoading = true;
+      getAssociatedList(this, getPolicy_TimePeriod, "policy");
     },
 
     onUpdateTimePeriod() {
@@ -200,52 +186,47 @@ export default {
           this.listLoading = true;
           let temp = Object.assign({}, this.temp);
           delete temp.id;
+          const relationships = {
+            policy: {
+              data: {
+                type: "policies",
+                id: this.temp.id,
+              },
+            },
+          };
+
           // 创建开放时间段
           if (this.actionType) {
             let createData = {
               data: {
                 type: "time-periods",
                 attributes: temp,
-                relationships: {
-                  policy: {
-                    data: {
-                      type: "policies",
-                      id: this.temp.id,
-                    },
-                  },
-                },
+                relationships,
               },
             };
-            createTimePeriod(createData).then((res) => {
-              console.log(res);
-              notifySuccess(this, "创建开放时间段成功");
-              this.listLoading = false;
-              this.dialogVisible = false;
-              this.list.push(res.data);
-            });
+            createFunc(this, createTimePeriod, createData)
           }
-          // 编辑策略
+          // 编辑时间段
           else {
-            const policy_id = this.list[this.editIndex].id;
+            const period_id = this.list[this.editIndex].id;
             let editData = {
               data: {
-                type: "grounds",
-                id: policy_id,
+                type: "time-periods",
+                id: period_id,
                 attributes: temp,
-                relationships: {
-                  policy: {
-                    data: { type: "policies", id: this.temp.id },
-                  },
-                },
+                relationships,
               },
             };
-            editTimePeriod(editData, this.temp.id).then((res) => {
-              console.log(res);
-              this.listLoading = false;
-              this.dialogVisible = false;
-              notifySuccess(this, "编辑时间段信息成功");
-              this.list[this.editIndex] = res.data;
-            });
+            // editTimePeriod(editData, period_id).then((res) => {
+            //   console.log(res);
+            //   this.listLoading = false;
+            //   this.dialogVisible = false;
+            //   notifySuccess(this, "编辑时间段信息成功");
+            //   this.list[this.editIndex] = res.data;
+            //   this.list[this.editIndex].policy =
+            //     res.included[0].attributes.name;
+            // });
+            editFunc(this, editTimePeriod, editData)
           }
         }
       });

@@ -16,7 +16,6 @@ export const common = {
     updateActionType(type, row = null, index = 0) {
       // 需要编辑目标的index
       this.editIndex = index;
-      // 编辑时显示上次编辑的内容，新增时显示空，增加用户体验
       // row为null时为新增，点击新增应清空上次输入的内容
       // 赋予数组要编辑的id，使用编辑功能时才会传入row
       if (row) {
@@ -25,12 +24,22 @@ export const common = {
         delete this.temp["created-at"];
         delete this.temp["updated-at"];
 
-        if (row.relationships.venue)
-          // 当你发现你给对象加了一个属性，在控制台能打印出来，但是却没有更新到视图上时，也许这个时候就需要用到this.$set（）这个方法
-          this.$set(this.temp, "id", row.relationships.venue.data.id);
-        else this.$set(this.temp, "id", row.relationships.policy.data.id);
+        // 记录关联ID
+        if (row.relationships) {
+          if (row.relationships.venue)
+            // 当你发现你给对象加了一个属性，在控制台能打印出来，但是却没有更新到视图上时，也许这个时候就需要用到this.$set（）这个方法
+            // 更新下拉框内容
+            this.$set(this.temp, "id", row.relationships.venue.data.id);
+          // 关联为策略时
+          else this.$set(this.temp, "id", row.relationships.policy.data.id);
+        }
       }
-      else for (let key in this.temp) this.temp[key] = ''
+      // 新增
+      else {
+        for (let key in this.temp)
+          if (this.temp[key] === false) this.temp[key] = false;
+          else this.temp[key] = null;
+      }
       this.actionType = type;
       this.dialogVisible = true;
     },

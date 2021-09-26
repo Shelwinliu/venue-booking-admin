@@ -7,14 +7,14 @@
       append-to-body
       @close="closeDialog"
     >
-      <el-form label-width="auto" style="margin-left: 50px;max-width: 500px">
+      <el-form label-width="100px" style="margin-left: 50px;max-width: 500px">
         <el-form-item label="场馆名称">
           <el-input v-model="temp.name" placeholder="例如：篮球馆"></el-input>
         </el-form-item>
 
         <el-form-item label="所属策略">
           <el-select
-            v-model="relationships.policy.data.id"
+            v-model="temp.id"
             placeholder="请选择"
             clearable>
             <el-option
@@ -54,6 +54,9 @@
         </el-form-item>
         <el-form-item label="场馆预约开放周期">
          {{ list[editIndex].attributes.pic }}
+        </el-form-item>
+        <el-form-item label="所属策略">
+         {{ list[editIndex].related_item }}
         </el-form-item>
 
         <el-form-item label="场馆图片">
@@ -122,7 +125,7 @@
           label="所属策略"
           show-overflow-tooltip
         >
-        <template slot-scope="scope">{{ scope.row.venue_policy}}</template>
+        <template slot-scope="scope">{{ scope.row.related_item}}</template>
         </el-table-column>
         <el-table-column label="操作">
           <template slot-scope="{row,$index}">
@@ -171,7 +174,6 @@
 </template>
 
 <script>
-import { getPolicyList } from "@/api/Policy/policy.js";
 import {
   getVenueList,
   getVenue_PolicyList,
@@ -184,7 +186,14 @@ import ImageUpload from "./components/image-upload.vue";
 import { common } from "@/mixin/index.js";
 
 import { scrollTo } from "@/utils/scroll-to";
-import { delFunc } from "@/utils/index";
+import {
+  getAssociatedList,
+  getPolicyOpts,
+  createFunc,
+  editFunc,
+  delFunc,
+} from "@/utils/index";
+import { notifySuccess, notifyFail } from "@/utils/notify.js";
 
 export default {
   name: "ComplexTable",
@@ -216,19 +225,21 @@ export default {
       // 策略选项
       policyOpts: [],
       // 场馆所关联的策略
-      relationships: {
-        policy: {
-          data: {
-            type: "policies",
-            id: "",
-          },
-        },
-      },
+      // relationships: {
+      //   policy: {
+      //     data: {
+      //       type: "policies",
+      //       id: "",
+      //     },
+      //   },
+      // },
       venueName: "",
       openCycle: null,
       temp: {
         name: "",
         pic: "",
+        // 记录策略id
+        id: "",
       },
       // 新增或编辑图片时是否显示上次上传的图片
     };
@@ -236,113 +247,52 @@ export default {
   computed: {},
   watch: {},
   created() {
-    this.getPolicyOps();
-    this.getList();
+    getPolicyOpts(this);
+    getAssociatedList(this, getVenue_PolicyList, "policy");
   },
   mounted() {},
   methods: {
-    // getList(currentPage = 1) {
-    //   this.listLoading = true;
-    //   getVenueList({
-    //     currentPage,
-    //     page_size: 10
-    //     }).then((res) => {
-    //     console.log(res.data.items);
-    //     this.list = res.data.items;
-    //     this.total = res.data.total
+    // getList() {
+    //   getVenueList().then((res) => {
+    //     this.list = res.data;
     //     this.listLoading = false;
     //   });
     // },
 
-    getPolicyOps() {
-      getPolicyList().then((res) => {
-        this.policyOpts = res.data;
-      });
-    },
-
-    getList() {
-      this.listLoading = true;
-      // getVenueList().then((res) => {
-      //   this.list = res.data;
-      //   this.listLoading = false;
-      // });
-      getVenue_PolicyList("policy").then((res) => {
-        console.log(res);
-        this.listLoading = false;
-        // 存入了场馆id
-        this.list = res.data;
-        // res.data.forEach(item => {
-        //   this.list.push(item)
-        // })
-        // 匹配场馆所属策略
-        res.included.forEach((included) => {
-          res.data.forEach((data, i) => {
-            if (included.id === data.relationships.policy.data.id)
-              this.list[i].venue_policy = included.attributes.name;
-          });
-        });
-      });
-    },
-
     // 新增或编辑
     onUpdateVenue() {
       this.listLoading = true;
-      this.dialogVisible = false;
+      let temp = Object.assign({}, this.temp);
+      delete temp.id;
+      const relationships = {
+        policy: {
+          data: {
+            type: "policies",
+            id: this.temp.id,
+          },
+        },
+      };
 
       if (this.actionType) {
         let createData = {
           data: {
             type: "venues",
-            attributes: this.temp,
-            relationships: this.relationships,
+            attributes: temp,
+            relationships,
           },
         };
-        addVenueItem(createData).then(
-          (res) => {
-            console.log(res);
-            this.list.push(res.data);
-            // 往新增加的场所中添加所属策略属性，因为获取与新增返回的数据结构不同
-            this.list[this.list.length - 1].venue_policy =
-              res.included[0].attributes.name;
-            this.listLoading = false;
-            // this.getList()
-            this.$notify({
-              title: "成功",
-              message: "新增场馆信息成功",
-              type: "success",
-            });
-          },
-          (err) => {
-            console.log(err);
-          }
-        );
+        createFunc(this, addVenueItem, createData);
       } else {
-        let temp = Object.assign({}, this.temp);
-        delete temp.id;
         const venue_id = this.list[this.editIndex].id;
         let editData = {
           data: {
             type: "venues",
             id: venue_id,
             attributes: temp,
-            relationships: this.relationships
+            relationships,
           },
         };
-        editVenueItem(editData, this.temp.id).then(
-          (res) => {
-            console.log(res);
-            this.listLoading = false;
-            this.list[this.editIndex] = res.data;
-            this.$notify({
-              title: "成功",
-              message: "编辑场馆信息成功",
-              type: "success",
-            });
-          },
-          (err) => {
-            console.log(err);
-          }
-        );
+        editFunc(this, editVenueItem, editData);
       }
     },
 

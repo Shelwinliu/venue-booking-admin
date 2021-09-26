@@ -28,7 +28,7 @@ export function createTimePeriod(data) {
 // 编辑开放时间段
 export function editTimePeriod(data, id) {
   return request({
-    url: `/policies/${id}`,
+    url: `/time-periods/${id}`,
     method: 'put',
     data
   })

@@ -19,17 +19,13 @@
       style="width: 100%; margin-bottom: 10px"
     >
       <el-table-column type="selection" width="55"> </el-table-column>
-      <el-table-column prop="id" label="时间段ID" width="180">
-      </el-table-column>
+      <el-table-column prop="id" label="ID" width="180"> </el-table-column>
       <el-table-column prop="related_item" label="关联策略" width="180">
       </el-table-column>
-      <el-table-column label="开始时间 - 结束时间">
+      <el-table-column label="关闭日期">
         <template slot-scope="{ row }">
           <i class="el-icon-time"></i>
-          <span style="margin-left: 10px"
-            >{{ row.attributes["start-time"] }} -
-            {{ row.attributes["stop-time"] }}</span
-          >
+          <span style="margin-left: 10px">{{ row.attributes.date }}</span>
         </template>
       </el-table-column>
 
@@ -92,22 +88,11 @@
         <el-form-item label="* 开放时间段">
           <div style="margin-bottom: 20px; display: flex; align-items: center">
             <date-picker
-              v-model="temp['start-time']"
-              type="time"
-              value-type="HH:mm:ss"
+              v-model="temp.date"
+              type="date"
+              value-type="YYYYMMDD"
               placeholder="选择开始时间"
-              format="HH : mm"
-              :minute-step="30"
-              prefix-class="xmx"
-            ></date-picker>
-            <span style="padding: 0 10px">至</span>
-            <date-picker
-              v-model="temp['stop-time']"
-              type="time"
-              value-type="HH:mm:ss"
-              placeholder="选择结束时间"
-              format="HH : mm"
-              :minute-step="30"
+              format="YYYY-MM-DD"
               prefix-class="xmx"
             ></date-picker>
           </div>
@@ -128,16 +113,13 @@
 </template>
 
 <script>
-import { getPolicyList, editPolicy } from "@/api/Policy/policy.js";
 import {
-  getTimePeriod,
-  getPolicy_TimePeriod,
-  createTimePeriod,
-  deleteTimePeriod,
-  editTimePeriod,
-} from "@/api/Policy/time-periods.js";
+  getClosedDates_Policy,
+  createClosedDates,
+  editClosedDates,
+  deleteClosedDates,
+} from "@/api/Policy/close-dates.js";
 
-import { notifySuccess, notifyFail } from "@/utils/notify.js";
 import {
   getPolicyOpts,
   getAssociatedList,
@@ -153,16 +135,16 @@ import "@/styles/datepicker.scss";
 import "vue2-datepicker/locale/zh-cn";
 
 export default {
+  name: "ClosedDates",
   mixins: [common],
   components: { DatePicker },
   data() {
     return {
       policyOpts: [],
       temp: {
-        // 记录策略
+        // 记录关联id
         id: "",
-        "start-time": "",
-        "stop-time": "",
+        date: null,
       },
       rules: {
         id: [{ required: true, message: "策略名称不能为空", trigger: "blur" }],
@@ -171,59 +153,59 @@ export default {
   },
   created() {
     getPolicyOpts(this);
-    getAssociatedList(this, getPolicy_TimePeriod, "policy");
+    getAssociatedList(this, getClosedDates_Policy, "policy");
   },
   methods: {
     onUpdateTimePeriod() {
       this.$refs.form.validate((valid) => {
-          if (valid && this.temp['start-time'] && this.temp['stop-time']) {
-            this.listLoading = true;
-            let temp = Object.assign({}, this.temp);
-            delete temp.id;
-            const relationships = {
-              policy: {
-                data: {
-                  type: "policies",
-                  id: this.temp.id,
-                },
+        if (valid && this.temp.date) {
+          this.listLoading = true;
+          let temp = Object.assign({}, this.temp);
+          delete temp.id;
+          const relationships = {
+            policy: {
+              data: {
+                type: "policies",
+                id: this.temp.id,
+              },
+            },
+          };
+
+          // 创建开放时间段
+          if (this.actionType) {
+            let createData = {
+              data: {
+                type: "closed-dates",
+                attributes: temp,
+                relationships,
               },
             };
-
-            // 创建开放时间段
-            if (this.actionType) {
-              let createData = {
-                data: {
-                  type: "time-periods",
-                  attributes: temp,
-                  relationships,
-                },
-              };
-              createFunc(this, createTimePeriod, createData);
-            }
-            // 编辑时间段
-            else {
-              const period_id = this.list[this.editIndex].id;
-              let editData = {
-                data: {
-                  type: "time-periods",
-                  id: period_id,
-                  attributes: temp,
-                  relationships,
-                },
-              };
-              editFunc(this, editTimePeriod, editData);
-            }
-            return;
+            createFunc(this, createClosedDates, createData);
           }
+          // 编辑时间段
+          else {
+            const date_id = this.list[this.editIndex].id;
+            let editData = {
+              data: {
+                type: "closed-dates",
+                id: date_id,
+                attributes: temp,
+                relationships,
+              },
+            };
+            editFunc(this, editClosedDates, editData);
+          }
+          return;
+        }
         this.$message({
-          message: "请选择完整开放时间段",
+          message: "请选择关闭日期",
           type: "warning",
         });
       });
     },
 
     onDeleteTimePeriod(row, index) {
-      delFunc(this, deleteTimePeriod, row, index);
+      delFunc(this, deleteClosedDates, row, index);
     },
   },
 };

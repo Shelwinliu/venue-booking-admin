@@ -30,8 +30,14 @@ export function getAssociatedList(that, getInclude_api, type) {
 
 // 获取策略选项
 export function getPolicyOpts(that) {
+  that.listLoading = true
   getPolicyList().then((res) => {
+    that.listLoading = false
     that.policyOpts = res.data;
+  }, err => {
+    console.log(err);
+    that.listLoading = false
+    that.$message.error("获取信息失败");
   });
 }
 

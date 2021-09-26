@@ -49,7 +49,7 @@
         </el-form-item>
         <el-form-item label="场馆类别">
           <el-select
-            v-model="temp.id"
+            v-model.number="temp.id"
             placeholder="请选择"
             clearable>
             <el-option
@@ -88,7 +88,7 @@
         <el-table-column label="场地名称" width="120">
           <template slot-scope="{row}">{{ row.attributes.name }}</template>
         </el-table-column>
-        <el-table-column label="所属分类" width="120">
+        <el-table-column label="关联场馆" width="120">
           <template slot-scope="{row}">{{ row.related_item }}</template>
         </el-table-column>
         <el-table-column
@@ -133,7 +133,7 @@
         <el-form-item label="场所名称">
           {{ list[editIndex].attributes.name }}
         </el-form-item>
-        <el-form-item label="所属分类">
+        <el-form-item label="关联场馆">
          {{ list[editIndex].related_item }}
         </el-form-item>
 
@@ -190,7 +190,7 @@ export default {
   watch: {},
   created() {
     this.getClassifiedInfo();
-    this.getList();
+    getAssociatedList(this, getVenue_GroundList, "venue");
   },
   mounted() {},
   methods: {
@@ -205,14 +205,6 @@ export default {
         //   });
         this.venueOptions = res.data;
       });
-    },
-
-    // 获取场所列表
-    getList() {
-      // getGroundList().then((res) => {
-      //   console.log(res);
-      // });
-      getAssociatedList(this, getVenue_GroundList, "venue");
     },
 
     onUpdateGround() {

@@ -12,9 +12,9 @@
           <el-input v-model="temp.name" placeholder="例如：篮球馆"></el-input>
         </el-form-item>
 
-        <el-form-item label="所属策略">
+        <el-form-item label="关联策略">
           <el-select
-            v-model="temp.id"
+            v-model.number="temp.id"
             placeholder="请选择"
             clearable>
             <el-option
@@ -55,7 +55,7 @@
         <el-form-item label="场馆预约开放周期">
          {{ list[editIndex].attributes.pic }}
         </el-form-item>
-        <el-form-item label="所属策略">
+        <el-form-item label="关联策略">
          {{ list[editIndex].related_item }}
         </el-form-item>
 
@@ -122,7 +122,7 @@
         </el-table-column>
         <el-table-column
           property="address"
-          label="所属策略"
+          label="关联策略"
           show-overflow-tooltip
         >
         <template slot-scope="scope">{{ scope.row.related_item}}</template>
@@ -224,15 +224,6 @@ export default {
       ],
       // 策略选项
       policyOpts: [],
-      // 场馆所关联的策略
-      // relationships: {
-      //   policy: {
-      //     data: {
-      //       type: "policies",
-      //       id: "",
-      //     },
-      //   },
-      // },
       venueName: "",
       openCycle: null,
       temp: {

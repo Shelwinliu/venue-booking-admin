@@ -263,7 +263,7 @@ export const asyncRoutes = [
       },
       {
         path: "closed_dates",
-        component: () => import("@/views/error-page/404"),
+        component: () => import("@/views/error-page/closed-dates"),
         name: "closed_dates",
         meta: { title: "关闭场馆开放日期" }
       },

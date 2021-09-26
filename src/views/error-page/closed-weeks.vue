@@ -20,8 +20,8 @@
     >
       <el-table-column type="selection" width="55"> </el-table-column>
       <el-table-column prop="id" label="ID" width="180"> </el-table-column>
-      <el-table-column prop="related_item" label="策略名称"> </el-table-column>
-      <el-table-column label="打✔代表关闭" width="180">
+      <el-table-column prop="related_item" label="关联策略"> </el-table-column>
+      <el-table-column label="打叉代表关闭" width="180">
         <el-table-column width="50" label="周一"
           ><template slot-scope="{ row }"
             ><i
@@ -112,8 +112,8 @@
         style="margin-left: 50px; max-width: 500px"
         :rules="rules"
       >
-        <el-form-item label="所属策略" prop="id">
-          <el-select v-model="temp.id" placeholder="请选择" clearable>
+        <el-form-item label="关联策略" prop="id">
+          <el-select v-model.number="temp.id" placeholder="请选择" clearable>
             <el-option
               v-for="item in policyOpts"
               :key="item.id"
@@ -123,7 +123,7 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item>
+        <el-form-item label="* 关闭时间">
           <!-- <template v-for="(day, key, index) in temp">
             <el-radio
               :v-model="day"
@@ -214,9 +214,9 @@ import {
   getClosedWeeks_Policy,
   createClosedWeeks,
   editClosedWeeks,
-  deleteClosedWeeks
+  deleteClosedWeeks,
 } from "@/api/Policy/close-weeks.js";
-import { notifySuccess, notifyFail } from "@/utils/notify.js";
+
 import {
   createFunc,
   getPolicyOpts,
@@ -228,6 +228,7 @@ import {
 import { common } from "@/mixin/index.js";
 
 export default {
+  name: "ClosedWeeks",
   mixins: [common],
   data() {
     return {
@@ -261,43 +262,49 @@ export default {
 
     onUpdate() {
       this.$refs.form.validate((valid) => {
-        if (valid) {
-          this.listLoading = true;
-          const temp = Object.assign({}, this.temp);
-          delete temp.id;
-          const relationships = {
-            policy: {
-              data: {
-                type: "policies",
-                id: this.temp.id,
-              },
-            },
-          };
-          // 创建
-          if (this.actionType) {
-            const createData = {
-              data: {
-                type: "closed-weeks",
-                attributes: temp,
-                relationships,
+        for (let key in this.temp)
+          if (valid && this.temp[key] === true) {
+            this.listLoading = true;
+            const temp = Object.assign({}, this.temp);
+            delete temp.id;
+            const relationships = {
+              policy: {
+                data: {
+                  type: "policies",
+                  id: this.temp.id,
+                },
               },
             };
-            createFunc(this, createClosedWeeks, createData);
+            // 创建
+            if (this.actionType) {
+              const createData = {
+                data: {
+                  type: "closed-weeks",
+                  attributes: temp,
+                  relationships,
+                },
+              };
+              createFunc(this, createClosedWeeks, createData);
+            }
+            // 编辑
+            else {
+              const week_id = this.list[this.editIndex].id;
+              let editData = {
+                data: {
+                  type: "closed-weeks",
+                  id: week_id,
+                  attributes: temp,
+                  relationships,
+                },
+              };
+              editFunc(this, editClosedWeeks, editData);
+            }
+            return;
           }
-          // 编辑
-          else {
-            const week_id = this.list[this.editIndex].id;
-            let editData = {
-              data: {
-                type: "closed-weeks",
-                id: week_id,
-                attributes: temp,
-                relationships
-              },
-            };
-            editFunc(this, editClosedWeeks, editData);
-          }
-        }
+          this.$message({
+          message: '请至少关闭一个时间',
+          type: 'warning'
+        });
       });
     },
 

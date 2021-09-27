@@ -245,7 +245,7 @@ export default {
         sun: false,
       },
       rules: {
-        id: [{ required: true, message: "策略名称不能为空", trigger: "blur" }],
+        id: [{ required: true, message: "关联策略不能为空", trigger: "blur" }],
       },
     };
   },

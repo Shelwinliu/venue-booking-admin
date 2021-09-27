@@ -269,15 +269,15 @@ export const asyncRoutes = [
       },
       {
         path: "opened_week",
-        component: () => import("@/views/error-page/404"),
+        component: () => import("@/views/error-page/special-open-weeks"),
         name: "opened_week",
-        meta: { title: "特殊日按周开放", noCache: true }
+        meta: { title: "特殊日按周开放" }
       },
       {
         path: "opened_day",
         component: () => import("@/views/error-page/404"),
         name: "opened_day",
-        meta: { title: "特殊日按日期开放", noCache: true }
+        meta: { title: "特殊日按日期开放" }
       }
     ]
   },

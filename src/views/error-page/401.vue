@@ -182,7 +182,6 @@ export default {
   methods: {
     getList() {
       getPolicyList().then((res) => {
-        console.log(res.included);
         console.log(res);
         this.list = res.data;
       });

@@ -2,7 +2,7 @@ import { notifySuccess, notifyFail } from "@/utils/notify.js";
 import { getPolicyList } from "@/api/Policy/policy.js";
 
 export function getAssociatedList(that, getInclude_api, type) {
-  that.listLoading = true
+  that.listLoading = true;
   getInclude_api(type).then(
     res => {
       console.log(res);
@@ -30,27 +30,38 @@ export function getAssociatedList(that, getInclude_api, type) {
 
 // 获取策略选项
 export function getPolicyOpts(that) {
-  that.listLoading = true
-  getPolicyList().then((res) => {
-    that.listLoading = false
-    that.policyOpts = res.data;
-  }, err => {
-    console.log(err);
-    that.listLoading = false
-    that.$message.error("获取信息失败");
-  });
+  that.listLoading = true;
+  getPolicyList().then(
+    res => {
+      that.listLoading = false;
+      that.policyOpts = res.data;
+    },
+    err => {
+      console.log(err);
+      that.listLoading = false;
+      that.$message.error("获取信息失败");
+    }
+  );
 }
 
 // 抽取新增方法
-export function createFunc(that, create_api, createData) {
+export function createFunc(that, create_api, createData, relatedType = null) {
   create_api(createData).then(
     res => {
       console.log(res);
       that.list.push(res.data);
       // 往新增加的场所中添加所属策略属性，因为获取与新增返回的数据结构不同
-      if(res.included)
-      that.list[that.list.length - 1].related_item =
-        res.included[0].attributes.name;
+      if (res.included) {
+        if (relatedType)
+          res.included.forEach((relatedItem, index) => {
+            if (relatedItem.type === relatedType)
+              that.list[that.list.length - 1].related_item =
+                res.included[index].attributes.name;
+          });
+        else
+          that.list[that.list.length - 1].related_item =
+            res.included[0].attributes.name;
+      }
       that.listLoading = false;
       that.dialogVisible = false;
       notifySuccess(that, "创建信息成功");
@@ -64,14 +75,23 @@ export function createFunc(that, create_api, createData) {
 }
 
 // 抽取编辑方法
-export function editFunc(that, edit_api, editData) {
+export function editFunc(that, edit_api, editData, relatedType = null) {
   edit_api(editData, editData.data.id).then(
     res => {
       console.log(res);
       that.list[that.editIndex] = res.data;
       // 往新增加的场所中添加所属策略属性，因为获取与新增返回的数据结构不同
-      if(res.included)
-      that.list[that.editIndex].related_item = res.included[0].attributes.name;
+      if (res.included) {
+        if (relatedType)
+          res.included.forEach((relatedItem, index) => {
+            if (relatedItem.type === relatedType)
+              that.list[that.editIndex].related_item =
+                res.included[index].attributes.name;
+          });
+        else
+          that.list[that.editIndex].related_item =
+            res.included[0].attributes.name;
+      }
       that.listLoading = false;
       that.dialogVisible = false;
       notifySuccess(that, "更新信息成功");

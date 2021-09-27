@@ -1,11 +1,18 @@
 <template>
   <div id="app">
-    <router-view />
+    <keep-alive>
+      <router-view :key="key" />
+    </keep-alive>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'App'
-}
+  name: "App",
+  computed: {
+    key() {
+      return this.$route.path + Math.random();
+    },
+  },
+};
 </script>

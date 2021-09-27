@@ -113,7 +113,7 @@
         :rules="rules"
       >
         <el-form-item label="关联策略" prop="id">
-          <el-select v-model.number="temp.id" placeholder="请选择" clearable>
+          <el-select v-model="temp.id" placeholder="请选择" clearable>
             <el-option
               v-for="item in policyOpts"
               :key="item.id"
@@ -301,9 +301,9 @@ export default {
             }
             return;
           }
-          this.$message({
-          message: '请至少关闭一个时间',
-          type: 'warning'
+        this.$message({
+          message: "请至少关闭一个时间",
+          type: "warning",
         });
       });
     },

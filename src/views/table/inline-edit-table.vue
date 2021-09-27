@@ -49,7 +49,7 @@
         </el-form-item>
         <el-form-item label="场馆类别">
           <el-select
-            v-model.number="temp.id"
+            v-model="temp.id"
             placeholder="请选择"
             clearable>
             <el-option
@@ -229,7 +229,8 @@ export default {
             relationships,
           },
         };
-        createFunc(this, addGroundItem, createData)
+        createFunc(this, addGroundItem, createData, "venues")
+
       } else {
         const ground_id = this.list[this.editIndex].id;
         let editData = {
@@ -240,7 +241,7 @@ export default {
             relationships,
           },
         };
-        editFunc(this, editGroundItem, editData)
+        editFunc(this, editGroundItem, editData, "venues")
       }
     },
 

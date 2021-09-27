@@ -14,7 +14,7 @@
 
         <el-form-item label="关联策略">
           <el-select
-            v-model.number="temp.id"
+            v-model="temp.id"
             placeholder="请选择"
             clearable>
             <el-option

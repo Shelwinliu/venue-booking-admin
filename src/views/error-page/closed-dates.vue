@@ -64,7 +64,7 @@
     <el-dialog
       :visible.sync="dialogVisible"
       append-to-body
-      :title="actionType ? '新增开放时间段' : '编辑开放时间段'"
+      :title="actionType ? '新增关闭日期' : '编辑关闭日期'"
     >
       <el-form
         :model="temp"
@@ -73,8 +73,8 @@
         style="margin-left: 50px; max-width: 500px"
         :rules="rules"
       >
-        <el-form-item label="关联策略" prop="id">
-          <el-select v-model.number="temp.id" placeholder="请选择">
+        <el-form-item label="关联策略">
+          <el-select v-model="temp.id" placeholder="请选择">
             <el-option
               v-for="item in policyOpts"
               :key="item.id"
@@ -85,13 +85,13 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="* 开放时间段">
+        <el-form-item label="* 关闭日期">
           <div style="margin-bottom: 20px; display: flex; align-items: center">
             <date-picker
               v-model="temp.date"
               type="date"
               value-type="YYYYMMDD"
-              placeholder="选择开始时间"
+              placeholder="选择关闭日期"
               format="YYYY-MM-DD"
               prefix-class="xmx"
             ></date-picker>

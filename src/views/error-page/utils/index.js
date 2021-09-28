@@ -4,48 +4,51 @@ import { getPolicy_TimePeriod } from "@/api/Policy/time-periods.js";
 // 获取与策略关联的时间段
 export function getTimePeriodOpts(that) {
   getPolicy_TimePeriod("policy").then(res => {
-    console.log(res);
+    // console.log(res);
     that.timePeriod_Policy = res.data;
   });
 }
 
 export function getSpecialAssociatedList(that, getInclude_api, type) {
   that.listLoading = true;
+  // console.log(type);
   type.forEach(element => {
     getInclude_api(element).then(
       res => {
-        console.log(res.included);
+        console.log(res);
         that.listLoading = false;
         if (that.list.length === 0 && res.data.length) that.list = res.data;
         // 显示tabel关联策略
-        if (element === "policy") {
-          res.included.forEach(included => {
-            for (let i in res.data) {
-              that.list[i].relationships[element] =
-                res.data[i].relationships[element];
-              // 匹配策略名称
-              if (that.list[i].relationships[element].data.id === included.id)
-                that.$set(
-                  that.list[i],
-                  "relatedItem_1",
-                  included.attributes.name
-                );
-            }
-          });
-        } else
-          res.included.forEach(included => {
-            for (let i in res.data) {
-              that.list[i].relationships[element] =
-                res.data[i].relationships[element];
-              // 显示tabel开放时间段
-              if (that.list[i].relationships[element].data.id === included.id)
-                that.$set(
-                  that.list[i],
-                  "relatedItem_2",
-                  `${included.attributes["start-time"]} - ${included.attributes["stop-time"]}`
-                );
-            }
-          });
+        if (res.included) {
+          if (element === "policy") {
+            res.included.forEach(included => {
+              for (let i in res.data) {
+                that.list[i].relationships[element] =
+                  res.data[i].relationships[element];
+                // 匹配策略名称
+                if (that.list[i].relationships[element].data.id === included.id)
+                  that.$set(
+                    that.list[i],
+                    "relatedItem_1",
+                    included.attributes.name
+                  );
+              }
+            });
+          } else
+            res.included.forEach(included => {
+              for (let i in res.data) {
+                that.list[i].relationships[element] =
+                  res.data[i].relationships[element];
+                // 显示tabel开放时间段
+                if (that.list[i].relationships[element].data.id === included.id)
+                  that.$set(
+                    that.list[i],
+                    "relatedItem_2",
+                    `${included.attributes["start-time"]} - ${included.attributes["stop-time"]}`
+                  );
+              }
+            });
+        }
       },
       err => {
         console.log(err);

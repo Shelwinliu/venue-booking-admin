@@ -274,8 +274,8 @@ export const asyncRoutes = [
         meta: { title: "特殊日按周开放" }
       },
       {
-        path: "opened_day",
-        component: () => import("@/views/error-page/404"),
+        path: "opened_dates",
+        component: () => import("@/views/error-page/special-open-dates"),
         name: "opened_day",
         meta: { title: "特殊日按日期开放" }
       }

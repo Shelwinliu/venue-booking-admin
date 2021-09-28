@@ -21,9 +21,9 @@
       <el-table-column type="selection" width="55"> </el-table-column>
       <el-table-column prop="id" label="ID" width="180"> </el-table-column>
       <el-table-column prop="relatedItem_1" label="关联策略"> </el-table-column>
-      <el-table-column label="特殊开放时间">
+      <el-table-column label="特殊开放日期">
         <template slot-scope="{$index}">
-          {{list[$index].attributes.day | filter}}
+          {{list[$index].attributes.date}}
         </template>
       </el-table-column>
       <el-table-column prop="relatedItem_2" label="开放时间段"></el-table-column>
@@ -73,17 +73,18 @@
         style="margin-left: 50px; max-width: 500px"
         :rules="rules"
       >
-        <el-form-item label="特殊开放时间" prop="day" label-width="120px"
-          ><el-radio-group v-model="temp.day">
-            <el-radio label="1">周一</el-radio>
-            <el-radio label="2">周二</el-radio>
-            <el-radio label="3">周三</el-radio>
-            <el-radio label="4">周四</el-radio>
-            <el-radio label="5">周五</el-radio>
-            <el-radio label="6">周六</el-radio>
-            <el-radio label="0">周日</el-radio>
-          </el-radio-group></el-form-item
-        >
+        <el-form-item label="特殊开放日期" prop="date" label-width="120px">
+          <div style="margin-bottom: 20px; display: flex; align-items: center">
+            <date-picker
+              v-model="temp.date"
+              type="date"
+              value-type="YYYYMMDD"
+              placeholder="选择开放日期"
+              format="YYYY-MM-DD"
+              prefix-class="xmx"
+            ></date-picker>
+          </div>
+        </el-form-item>
         <el-form-item label="关联策略" prop="policy_id" label-width="120px">
           <el-select v-model="temp.policy_id" placeholder="请选择" @change="loadTimePeriodOpts">
             <el-option
@@ -120,11 +121,11 @@
 
 <script>
 import {
-  getOpenedWeeksRelated,
-  createOpenedWeeks,
-  deleteOpenedWeeks,
-  editOpenedWeeks,
-} from "@/api/Policy/special-open-weeks.js";
+  getOpenedDatesRelated,
+  createOpenedDates,
+  editOpenedDates,
+  deleteOpenedDates
+} from "@/api/Policy/special-open-dates.js";
 
 import {
   getTimePeriodOpts,
@@ -136,9 +137,14 @@ import { getPolicyOpts, delFunc } from "@/utils/index";
 
 import { common } from "@/mixin/index.js";
 
+import DatePicker from "vue2-datepicker";
+import "@/styles/datepicker.scss";
+import "vue2-datepicker/locale/zh-cn";
+
 export default {
-  name: "SpecialOpenWeeks",
+  name: "SpecialOpenDates",
   mixins: [common],
+  components: { DatePicker },
   data() {
     return {
       // 策略选项
@@ -149,11 +155,11 @@ export default {
       temp: {
         policy_id: null,
         timePeriod_id: null,
-        day: null,
+        date: null,
       },
       rules: {
-        day: [
-          { required: true, message: "请选择特殊开放时间", trigger: "blur" },
+        date: [
+          { required: true, message: "请选择特殊开放日期", trigger: "blur" },
         ],
         policy_id: [
           { required: true, message: "关联策略不能为空", trigger: "blur" },
@@ -164,32 +170,10 @@ export default {
       },
     };
   },
-  filters: {
-    filter(day) {
-      switch (day) {
-        case "1":
-          return "周一";
-        case "2":
-          return "周二";
-        case "3":
-          return "周三";
-        case "4":
-          return "周四";
-        case "5":
-          return "周五";
-        case "6":
-          return "周六";
-        case "0":
-          return "周日";
-        default:
-          break;
-      }
-    },
-  },
   created() {
     getPolicyOpts(this);
     getTimePeriodOpts(this);
-    getSpecialAssociatedList(this, getOpenedWeeksRelated, [
+    getSpecialAssociatedList(this, getOpenedDatesRelated, [
       "policy",
       "time-period",
     ]);
@@ -221,25 +205,25 @@ export default {
           if (this.actionType) {
             const createData = {
               data: {
-                type: "special-open-weeks",
+                type: "special-open-dates",
                 attributes: temp,
                 relationships,
               },
             };
-            specialCreateFunc(this, createOpenedWeeks, createData);
+            specialCreateFunc(this, createOpenedDates, createData);
           }
           // 编辑
           else {
-            const week_id = this.list[this.editIndex].id;
+            const date_id = this.list[this.editIndex].id;
             let editData = {
               data: {
-                type: "special-open-weeks",
-                id: week_id,
+                type: "special-open-dates",
+                id: date_id,
                 attributes: temp,
                 relationships,
               },
             };
-            specialEditFunc(this, editOpenedWeeks, editData);
+            specialEditFunc(this, editOpenedDates, editData);
           }
         }
       });
@@ -266,12 +250,12 @@ export default {
     },
 
     closeDialog() {
-      this.isToggle = false
-      this.timePeriodOpts.length = 0
+      this.isToggle = false;
+      this.timePeriodOpts.length = 0;
     },
 
     onDelete(row, index) {
-      delFunc(this, deleteOpenedWeeks, row, index);
+      delFunc(this, deleteOpenedDates, row, index);
     },
   },
 };

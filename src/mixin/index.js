@@ -31,7 +31,10 @@ export const common = {
             // 当你发现你给对象加了一个属性，在控制台能打印出来，但是却没有更新到视图上时，也许这个时候就需要用到this.$set（）这个方法
             // 更新下拉框内容
             this.$set(this.temp, "id", row.relationships.venue.data.id);
-          else if (row.type === "special-open-weeks") {
+          else if (
+            row.type === "special-open-weeks" ||
+            row.type === "special-open-dates"
+          ) {
             // 在编辑框上显示关联策略
             this.$set(this.temp, "policy_id", row.relationships.policy.data.id);
             // 一点击编辑显示关联时间段，一切换清空
